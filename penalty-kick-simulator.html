@@ -897,7 +897,8 @@
 
 
         // Animate the kick
-        function animateKick(outcome) {
+        // Optional forcedZone parameter for testing specific scenarios
+        function animateKick(outcome, forcedZone = null) {
             // Disable button during animation
             kickButton.disabled = true;
             
@@ -928,9 +929,20 @@
                 { name: 'center-high', endX: 50, endY: goalCenterY + 20, diveClass: 'dive-center-high' }
             ];
             
-            // Randomly select where the ball will go (target zone)
-            const ballZoneIndex = Math.floor(Math.random() * zones.length);
-            const ballZone = zones[ballZoneIndex];
+            // Select ball zone (forced or random)
+            let ballZoneIndex;
+            let ballZone;
+            
+            if (forcedZone) {
+                // TEST MODE: Use forced zone
+                ballZoneIndex = zones.findIndex(z => z.name === forcedZone);
+                ballZone = zones[ballZoneIndex];
+                console.log('TEST MODE: Forcing zone:', forcedZone, 'outcome:', outcome);
+            } else {
+                // Normal: Randomly select where the ball will go
+                ballZoneIndex = Math.floor(Math.random() * zones.length);
+                ballZone = zones[ballZoneIndex];
+            }
             
             // Determine goalkeeper dive based on outcome
             let gkDiveClass;
@@ -963,14 +975,36 @@
                     endY = goalCenterY + 10; // At goalkeeper's raised hands
                 }
             } else if (outcome === 'goal') {
-                // GOAL: Goalkeeper dives to the WRONG zone (different from ball)
-                // Pick a different zone for goalkeeper
-                let wrongZoneIndex;
-                do {
-                    wrongZoneIndex = Math.floor(Math.random() * zones.length);
-                } while (wrongZoneIndex === ballZoneIndex);
+                // GOAL: Goalkeeper dives to a COMPLETELY DIFFERENT DIRECTION
+                // Not just a different zone, but a different direction entirely
+                // This prevents the goalkeeper from accidentally looking like they saved it
                 
-                gkDiveClass = zones[wrongZoneIndex].diveClass;
+                // Group zones by direction
+                const leftZones = zones.filter(z => z.name.includes('left'));
+                const rightZones = zones.filter(z => z.name.includes('right'));
+                const centerZones = zones.filter(z => z.name.includes('center'));
+                
+                // Determine ball's direction
+                const ballDirection = ballZone.name.includes('left') ? 'left' 
+                                    : ballZone.name.includes('right') ? 'right' 
+                                    : 'center';
+                
+                // Pick goalkeeper zone from a DIFFERENT direction
+                let acceptableZones;
+                if (ballDirection === 'left') {
+                    // Ball goes left, goalkeeper dives right or stays center
+                    acceptableZones = [...rightZones, ...centerZones];
+                } else if (ballDirection === 'right') {
+                    // Ball goes right, goalkeeper dives left or stays center
+                    acceptableZones = [...leftZones, ...centerZones];
+                } else {
+                    // Ball goes center, goalkeeper dives left or right (NOT center)
+                    acceptableZones = [...leftZones, ...rightZones];
+                }
+                
+                // Pick a random zone from the acceptable direction
+                const chosenZone = acceptableZones[Math.floor(Math.random() * acceptableZones.length)];
+                gkDiveClass = chosenZone.diveClass;
                 
                 // Ball goes into goal (use original zone position)
                 endPercentX = ballZone.endX;
@@ -1123,6 +1157,17 @@
             
             // Small delay to ensure reset is complete
             setTimeout(() => {
+                // ============ TEST MODE ============
+                // Set to true to force a specific scenario for debugging
+                const TEST_MODE = false;
+                const TEST_OUTCOME = 'goal';  // 'goal', 'save', or 'miss'
+                const TEST_ZONE = 'center-high'; // 'left-low', 'left-high', 'right-low', 'right-high', 'center-low', 'center-high'
+                if (TEST_MODE) {
+                    animateKick(TEST_OUTCOME, TEST_ZONE);
+                    return;
+                }
+                // ============ END TEST MODE ============
+                
                 const probability = calculateSuccessProbability();
                 const outcome = determineOutcome(probability);
                 animateKick(outcome);
