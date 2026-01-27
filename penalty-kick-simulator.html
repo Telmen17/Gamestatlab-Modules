@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penalty Kick Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0066CC 0%, #003366 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: linear-gradient(to bottom, #FFFFFF 0%, #F5F5F5 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            border: 3px solid #0066CC;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .penalty-area {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to bottom, #4CAF50 0%, #4CAF50 60%, #2E7D32 100%);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 3px solid #fff;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .goalpost {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 120px;
+            border: 4px solid #fff;
+            border-bottom: none;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 2;
+        }
+
+        .goal-net {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 9px, rgba(255,255,255,0.3) 9px, rgba(255,255,255,0.3) 10px),
+                repeating-linear-gradient(90deg, transparent, transparent 9px, rgba(255,255,255,0.3) 9px, rgba(255,255,255,0.3) 10px);
+        }
+
+        .ball {
+            position: absolute;
+            bottom: 35px;
+            left: 52%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            transition: none;
+            z-index: 10;
+            will-change: transform, bottom, left;
+            display: block;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .ball img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+        }
+
+        .kicker {
+            position: absolute;
+            bottom: 30px;
+            left: calc(50% - 35px);
+            transform: translateX(-50%);
+            width: 40px;
+            height: 60px;
+            transition: transform 0.3s ease;
+        }
+
+        .kicker-body {
+            width: 20px;
+            height: 30px;
+            background: #FF6B6B;
+            border-radius: 10px 10px 5px 5px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .kicker-head {
+            width: 15px;
+            height: 15px;
+            background: #FFDBAC;
+            border-radius: 50%;
+            margin: 0 auto 5px;
+        }
+
+        .kicker-leg {
+            width: 8px;
+            height: 25px;
+            background: #FF6B6B;
+            position: absolute;
+            bottom: -25px;
+        }
+
+        .kicker-leg.left {
+            left: 3px;
+        }
+
+        .kicker-leg.right {
+            right: 3px;
+        }
+
+        .goalkeeper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 80px;
+            transition: all 0.3s ease;
+            z-index: 3;
+            margin-top: 40px;
+        }
+
+        .gk-body {
+            width: 30px;
+            height: 40px;
+            background: #4ECDC4;
+            border-radius: 8px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .gk-head {
+            width: 20px;
+            height: 20px;
+            background: #FFDBAC;
+            border-radius: 50%;
+            margin: 0 auto 5px;
+        }
+
+        .gk-arms {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            height: 20px;
+        }
+
+        .gk-arm {
+            width: 8px;
+            height: 22px;
+            background: #4ECDC4;
+            position: absolute;
+            top: 0;
+            border-radius: 3px;
+            transition: transform 0.3s ease;
+        }
+
+        .gk-arm.left {
+            left: -6px;
+            transform-origin: top center;
+        }
+
+        .gk-arm.right {
+            right: -6px;
+            transform-origin: top center;
+        }
+
+        /* Goalkeeper gloves */
+        .gk-glove {
+            position: absolute;
+            bottom: -12px;
+            width: 14px;
+            height: 14px;
+            background: #FF6B00;
+            border-radius: 3px 3px 6px 6px;
+            border: 2px solid #CC5500;
+        }
+
+        .gk-glove.left {
+            left: -3px;
+        }
+
+        .gk-glove.right {
+            right: -3px;
+        }
+
+        /* Glove fingers detail */
+        .gk-glove::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            height: 4px;
+            background: #FFaa00;
+            border-radius: 2px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .toggle-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .toggle-option {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            font-weight: 500;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .toggle-option:hover {
+            border-color: #0066CC;
+            transform: translateY(-2px);
+        }
+
+        .toggle-option.active {
+            background: #0066CC;
+            color: white;
+            border-color: #0066CC;
+        }
+
+        .kick-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #0066CC 0%, #003366 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.4);
+        }
+
+        .kick-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 102, 204, 0.6);
+        }
+
+        .kick-button:active {
+            transform: translateY(0);
+        }
+
+        .kick-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Modal Popup */
+        .modal-popup {
+            background: white;
+            border-radius: 16px;
+            padding: 30px 40px;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            max-width: 350px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .modal-overlay.show .modal-popup {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            font-size: 3em;
+            margin-bottom: 12px;
+            line-height: 1;
+        }
+
+        .modal-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .modal-subtitle {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .modal-close-btn {
+            padding: 10px 35px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Goal Result */
+        .modal-popup.goal {
+            border: 3px solid #4CAF50;
+        }
+
+        .modal-popup.goal .modal-icon {
+            color: #4CAF50;
+        }
+
+        .modal-popup.goal .modal-title {
+            color: #2E7D32;
+        }
+
+        .modal-popup.goal .modal-close-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+        }
+
+        /* Save Result */
+        .modal-popup.save {
+            border: 3px solid #0066CC;
+        }
+
+        .modal-popup.save .modal-icon {
+            color: #0066CC;
+        }
+
+        .modal-popup.save .modal-title {
+            color: #003366;
+        }
+
+        .modal-popup.save .modal-close-btn {
+            background: linear-gradient(135deg, #0066CC 0%, #003366 100%);
+            color: white;
+        }
+
+        /* Miss Result */
+        .modal-popup.miss {
+            border: 3px solid #FF6B6B;
+        }
+
+        .modal-popup.miss .modal-icon {
+            color: #C62828;
+        }
+
+        .modal-popup.miss .modal-title {
+            color: #C62828;
+        }
+
+        .modal-popup.miss .modal-close-btn {
+            background: linear-gradient(135deg, #FF6B6B 0%, #C62828 100%);
+            color: white;
+        }
+
+        @keyframes kickAnimation {
+            0% {
+                transform: translateX(-50%) rotate(0deg);
+            }
+            30% {
+                transform: translateX(-50%) rotate(-25deg) translateY(-8px);
+            }
+            60% {
+                transform: translateX(-50%) rotate(-35deg) translateY(-12px);
+            }
+            100% {
+                transform: translateX(-50%) rotate(0deg);
+            }
+        }
+
+        .kicker.kicking {
+            animation: kickAnimation 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 6 Goalkeeper Dive Animations */
+        
+        /* Dive Left Low - horizontal dive to the left */
+        @keyframes gkDiveLeftLow {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) translateX(-60px) rotate(-45deg); }
+        }
+        
+        /* Dive Left High - diving up and to the left */
+        @keyframes gkDiveLeftHigh {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) translateX(-50px) translateY(-40px) rotate(-30deg); }
+        }
+        
+        /* Dive Right Low - horizontal dive to the right */
+        @keyframes gkDiveRightLow {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) translateX(60px) rotate(45deg); }
+        }
+        
+        /* Dive Right High - diving up and to the right */
+        @keyframes gkDiveRightHigh {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) translateX(50px) translateY(-40px) rotate(30deg); }
+        }
+        
+        /* Stay Center Low - spread arms wide */
+        @keyframes gkStayCenterLow {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+        
+        /* Jump Center High - jump up with arms raised */
+        @keyframes gkJumpCenterHigh {
+            0% { transform: translate(-50%, -50%) translateY(0) scale(1); }
+            50% { transform: translate(-50%, -50%) translateY(-50px) scale(1.1); }
+            100% { transform: translate(-50%, -50%) translateY(-45px) scale(1.1); }
+        }
+
+        /* Goalkeeper dive classes */
+        .goalkeeper.dive-left-low {
+            animation: gkDiveLeftLow 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .goalkeeper.dive-left-high {
+            animation: gkDiveLeftHigh 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .goalkeeper.dive-right-low {
+            animation: gkDiveRightLow 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .goalkeeper.dive-right-high {
+            animation: gkDiveRightHigh 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .goalkeeper.dive-center-low {
+            animation: gkStayCenterLow 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .goalkeeper.dive-center-high {
+            animation: gkJumpCenterHigh 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        /* Arm stretch animations */
+        /* Arms start at 0deg (hanging down). Need to rotate UP and OUTWARD in dive direction */
+        /* Body tilt is -45deg for left dive, +45deg for right dive */
+        
+        /* Arms extend UP-LEFT for left dives */
+        /* To reach globally up-left (-135deg) with body at -45deg: arm rotation = -90deg */
+        @keyframes armReachDiveLeft {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-180deg) scaleY(1.3); }
+        }
+        
+        /* Arms extend UP-RIGHT for right dives */
+        /* To reach globally up-right (+135deg) with body at +45deg: arm rotation = +90deg */
+        @keyframes armReachDiveRight {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(180deg) scaleY(1.3); }
+        }
+        
+        /* Arms reach straight UP for center high jump */
+        @keyframes armReachUp {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(180deg) scaleY(1.3); }
+        }
+        
+        /* Arms spread outward for center low stay */
+        @keyframes armSpreadLeft {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-90deg) scaleY(1.2); }
+        }
+        
+        @keyframes armSpreadRight {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(90deg) scaleY(1.2); }
+        }
+
+        /* Arm animations for each dive type */
+        
+        /* Dive Left (Low & High) - arms reach in direction of dive */
+        .goalkeeper.dive-left-low .gk-arm.left,
+        .goalkeeper.dive-left-low .gk-arm.right,
+        .goalkeeper.dive-left-high .gk-arm.left,
+        .goalkeeper.dive-left-high .gk-arm.right {
+            animation: armReachDiveLeft 0.5s ease forwards;
+        }
+        
+        /* Dive Right (Low & High) - arms reach in direction of dive */
+        .goalkeeper.dive-right-low .gk-arm.left,
+        .goalkeeper.dive-right-low .gk-arm.right,
+        .goalkeeper.dive-right-high .gk-arm.left,
+        .goalkeeper.dive-right-high .gk-arm.right {
+            animation: armReachDiveRight 0.5s ease forwards;
+        }
+        
+        /* Stay Center Low - arms spread outward his left arm goes to my right and his right arm goes to my left*/
+        .goalkeeper.dive-center-low .gk-arm.left {
+            animation: armSpreadRight 0.5s ease forwards;
+        }
+        .goalkeeper.dive-center-low .gk-arm.right {
+            animation: armSpreadLeft 0.5s ease forwards;
+        }
+        
+        /* Jump Center High - both arms straight up */
+        .goalkeeper.dive-center-high .gk-arm.left,
+        .goalkeeper.dive-center-high .gk-arm.right {
+            animation: armReachUp 0.5s ease forwards;
+        }
+
+
+        @keyframes ballRotate {
+            0% {
+                transform: translateX(-50%) rotate(0deg);
+            }
+            100% {
+                transform: translateX(-50%) rotate(360deg);
+            }
+        }
+
+        .ball.kicking {
+            animation: ballRotate 0.8s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Penalty Kick Simulator</h1>
+        </div>
+        
+        <div class="penalty-area">
+            <div class="goalpost">
+                <div class="goal-net"></div>
+            </div>
+            <div class="ball" id="ball">
+                <!-- Replace the URL below with your own soccer ball emoji image URL if needed -->
+                <!-- Default uses EmojiCDN service - you can replace with any soccer ball image URL -->
+                <img src="https://em-content.zobj.net/source/twitter/376/soccer-ball_26bd.png" alt="Soccer Ball" id="ballImage">
+            </div>
+            <div class="kicker" id="kicker">
+                <div class="kicker-head"></div>
+                <div class="kicker-body"></div>
+                <div class="kicker-leg left"></div>
+                <div class="kicker-leg right"></div>
+            </div>
+            <div class="goalkeeper" id="goalkeeper">
+                <div class="gk-head"></div>
+                <div class="gk-body">
+                    <div class="gk-arms">
+                        <div class="gk-arm left">
+                            <div class="gk-glove left"></div>
+                        </div>
+                        <div class="gk-arm right">
+                            <div class="gk-glove right"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <span class="control-label">Kicker Experience:</span>
+                <div class="toggle-container">
+                    <div class="toggle-option" data-value="low" data-type="experience">Rookie</div>
+                    <div class="toggle-option active" data-value="medium" data-type="experience">Average</div>
+                    <div class="toggle-option" data-value="high" data-type="experience">Veteran</div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">Fatigue:</span>
+                <div class="toggle-container">
+                    <div class="toggle-option active" data-value="low" data-type="fatigue">Fresh</div>
+                    <div class="toggle-option" data-value="medium" data-type="fatigue">Tired</div>
+                    <div class="toggle-option" data-value="high" data-type="fatigue">Exhausted</div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">Match Experience:</span>
+                <div class="toggle-container">
+                    <div class="toggle-option" data-value="low" data-type="match">First Time</div>
+                    <div class="toggle-option active" data-value="medium" data-type="match">Regular</div>
+                    <div class="toggle-option" data-value="high" data-type="match">Seasoned</div>
+                </div>
+            </div>
+
+            <button class="kick-button" id="kickButton">KICK!</button>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-popup" id="modalPopup">
+            <div class="modal-icon" id="modalIcon"></div>
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-subtitle" id="modalSubtitle"></div>
+            <button class="modal-close-btn" id="modalCloseBtn">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        const state = {
+            experience: 'medium',
+            fatigue: 'low',
+            match: 'medium'
+        };
+
+        // DOM elements
+        const ball = document.getElementById('ball');
+        const kicker = document.getElementById('kicker');
+        const goalkeeper = document.getElementById('goalkeeper');
+        const kickButton = document.getElementById('kickButton');
+        const toggleOptions = document.querySelectorAll('.toggle-option');
+        
+        // Modal elements
+        const resultModal = document.getElementById('resultModal');
+        const modalPopup = document.getElementById('modalPopup');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalSubtitle = document.getElementById('modalSubtitle');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        // Toggle functionality
+        toggleOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const type = this.dataset.type;
+                const value = this.dataset.value;
+                
+                // Remove active class from siblings
+                this.parentElement.querySelectorAll('.toggle-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                
+                // Add active class to clicked option
+                this.classList.add('active');
+                
+                // Update state
+                if (type === 'experience') {
+                    state.experience = value;
+                } else if (type === 'fatigue') {
+                    state.fatigue = value;
+                } else if (type === 'match') {
+                    state.match = value;
+                }
+            });
+        });
+
+        // Calculate success probability based on state
+        function calculateSuccessProbability() {
+            let baseProbability = 0.75; // Base 75% success rate
+            
+            // Experience modifier
+            const experienceModifiers = {
+                low: -0.15,
+                medium: 0,
+                high: +0.10
+            };
+            
+            // Fatigue modifier
+            const fatigueModifiers = {
+                low: 0,
+                medium: -0.10,
+                high: -0.20
+            };
+            
+            // Match experience modifier
+            const matchModifiers = {
+                low: -0.10,
+                medium: 0,
+                high: +0.05
+            };
+            
+            baseProbability += experienceModifiers[state.experience];
+            baseProbability += fatigueModifiers[state.fatigue];
+            baseProbability += matchModifiers[state.match];
+            
+            // Clamp between 0.2 and 0.95
+            return Math.max(0.2, Math.min(0.95, baseProbability));
+        }
+
+        // Determine kick outcome
+        function determineOutcome(probability) {
+            const random = Math.random();
+            
+            // More realistic distribution:
+            // - Goals: ~70% of on-target shots
+            // - Saves: ~22% (goalkeeper saves are more common than misses)
+            // - Misses: ~8% (completely missing is rare for pros)
+            
+            const goalThreshold = probability * 0.70; // 70% of success = goal
+            const saveThreshold = goalThreshold + 0.22; // +22% = save
+            // Remaining ~8% = miss
+            
+            if (random < goalThreshold) {
+                return 'goal'; // Goal scored
+            } else if (random < saveThreshold) {
+                return 'save'; // Saved by goalkeeper
+            } else {
+                return 'miss'; // Missed the goal
+            }
+        }
+
+        // Animation state
+        let animationFrameId = null;
+
+        // Reset animation
+        function resetAnimation() {
+            // Cancel any ongoing animation
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            
+            ball.style.left = '52%';
+            ball.style.bottom = '35px';
+            ball.style.transform = 'translateX(-50%)';
+            ball.classList.remove('kicking');
+            kicker.classList.remove('kicking');
+            // Remove all dive classes (old and new)
+            goalkeeper.classList.remove(
+                'diving', 'diving-left', 'diving-right', 'diving-center',
+                'dive-left-low', 'dive-left-high',
+                'dive-right-low', 'dive-right-high',
+                'dive-center-low', 'dive-center-high'
+            );
+            goalkeeper.style.left = '50%';
+            goalkeeper.style.top = '50%';
+            goalkeeper.style.transform = 'translate(-50%, -50%)';
+        }
+
+        // Animate ball with proper projectile motion physics and ease-out
+        function animateBall(startPercentX, startY, endPercentX, endY, duration, callback) {
+            const startTime = performance.now();
+            const penaltyArea = document.querySelector('.penalty-area');
+            const areaWidth = penaltyArea.offsetWidth;
+            const areaHeight = penaltyArea.offsetHeight;
+
+            // Convert start/end X from % to pixels
+            const startX = (startPercentX / 100) * areaWidth;
+            const endX = (endPercentX / 100) * areaWidth;
+
+            // Distances
+            const distanceX = endX - startX;
+            const distanceY = endY - startY; // In CSS bottom coordinates
+
+            // Side curve (pixels)
+            const curveAmount = 10;
+
+            // Ease-out cubic: fast start, slow end
+            function easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            // Parabolic arc for natural ball trajectory
+            // Peak at 40% of the journey, higher peak for longer distances
+            function getArcHeight(progress) {
+                // Parabola that peaks at progress = 0.4
+                const peakProgress = 0.4;
+                const peakHeight = Math.min(120, Math.abs(distanceY) * 0.3 + 60);
+                
+                // Parabolic formula: 4 * h * p * (1 - p) peaks at p = 0.5
+                // Adjusted to peak earlier at 0.4
+                const adjustedProgress = progress / 0.8; // Shift peak earlier
+                if (adjustedProgress <= 1) {
+                    return peakHeight * 4 * adjustedProgress * (1 - adjustedProgress);
+                }
+                return 0;
+            }
+
+            function animate(currentTime) {
+                const elapsed = (currentTime - startTime) / 1000;
+                const T = duration / 1000;
+                const linearProgress = Math.min(elapsed / T, 1);
+                
+                // Apply ease-out to progress (fast start, slow end)
+                const easedProgress = easeOutCubic(linearProgress);
+
+                // Calculate current X position with easing
+                const currentX = startX + distanceX * easedProgress;
+                
+                // Calculate current Y position with arc
+                const arcHeight = getArcHeight(linearProgress);
+                const baseY = startY + distanceY * easedProgress;
+                const currentY = baseY + arcHeight;
+
+                // Add subtle side curve
+                const sideCurve = Math.sin(linearProgress * Math.PI) * curveAmount;
+
+                // Update ball position
+                ball.style.left = `${currentX + sideCurve}px`;
+                ball.style.bottom = `${currentY}px`;
+                ball.style.transform = 'none';
+
+                if (linearProgress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    // Animation complete
+                    animationFrameId = null;
+                    ball.style.left = `${endX}px`;
+                    ball.style.bottom = `${endY}px`;
+                    if (callback) callback();
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+
+
+        // Animate the kick
+        function animateKick(outcome) {
+            // Disable button during animation
+            kickButton.disabled = true;
+            
+            // Get penalty area dimensions
+            const penaltyArea = document.querySelector('.penalty-area');
+            const areaHeight = penaltyArea.offsetHeight;
+            const areaWidth = penaltyArea.offsetWidth;
+            
+            // Goal is at 50% top, so goal center is at 50% of height
+            const goalCenterY = areaHeight * 0.5;
+            const goalTop = goalCenterY - 60; // Goal height is 120px, so top is center - 60
+            const goalBottom = goalCenterY + 60; // Goal bottom is center + 60
+            
+            // Starting position (slightly to the right of center, at ground level)
+            const startPercentX = 52;
+            const startY = 35;
+            
+            // 6 TARGET ZONES for ball and goalkeeper
+            // Goal is 300px wide centered at 50%, so left edge ~25%, right edge ~75%
+            // Ball should land INSIDE the net, not on borders
+            // Each zone has: name, ball endX%, ball endY, goalkeeper dive class
+            const zones = [
+                { name: 'left-low', endX: 32, endY: goalCenterY + 10, diveClass: 'dive-left-low' },
+                { name: 'left-high', endX: 34, endY: goalCenterY + 15, diveClass: 'dive-left-high' },
+                { name: 'right-low', endX: 68, endY: goalCenterY + 10, diveClass: 'dive-right-low' },
+                { name: 'right-high', endX: 66, endY: goalCenterY + 15, diveClass: 'dive-right-high' },
+                { name: 'center-low', endX: 50, endY: goalCenterY + 5, diveClass: 'dive-center-low' },
+                { name: 'center-high', endX: 50, endY: goalCenterY + 20, diveClass: 'dive-center-high' }
+            ];
+            
+            // Randomly select where the ball will go (target zone)
+            const ballZoneIndex = Math.floor(Math.random() * zones.length);
+            const ballZone = zones[ballZoneIndex];
+            
+            // Determine goalkeeper dive based on outcome
+            let gkDiveClass;
+            let endPercentX = ballZone.endX;
+            let endY = ballZone.endY;
+            
+            if (outcome === 'save') {
+                // SAVE: Goalkeeper dives to the SAME zone as the ball
+                gkDiveClass = ballZone.diveClass;
+                
+                // Ball stops at goalkeeper's gloves (IN FRONT of goal, not inside)
+                // The goalkeeper is in front of the goal line, so ball should stop there
+                if (ballZone.name === 'left-low') {
+                    endPercentX = 32;
+                    endY = goalCenterY - 50; // In front of goal, low position
+                } else if (ballZone.name === 'left-high') {
+                    endPercentX = 34;
+                    endY = goalCenterY - 20; // In front of goal, mid-high position
+                } else if (ballZone.name === 'right-low') {
+                    endPercentX = 68;
+                    endY = goalCenterY - 50; // In front of goal, low position
+                } else if (ballZone.name === 'right-high') {
+                    endPercentX = 66;
+                    endY = goalCenterY - 20; // In front of goal, mid-high position
+                } else if (ballZone.name === 'center-low') {
+                    endPercentX = 50;
+                    endY = goalCenterY - 60; // In front of goalkeeper's feet
+                } else if (ballZone.name === 'center-high') {
+                    endPercentX = 50;
+                    endY = goalCenterY + 10; // At goalkeeper's raised hands
+                }
+            } else if (outcome === 'goal') {
+                // GOAL: Goalkeeper dives to the WRONG zone (different from ball)
+                // Pick a different zone for goalkeeper
+                let wrongZoneIndex;
+                do {
+                    wrongZoneIndex = Math.floor(Math.random() * zones.length);
+                } while (wrongZoneIndex === ballZoneIndex);
+                
+                gkDiveClass = zones[wrongZoneIndex].diveClass;
+                
+                // Ball goes into goal (use original zone position)
+                endPercentX = ballZone.endX;
+                endY = ballZone.endY;
+            } else {
+                // MISS: Ball goes outside, goalkeeper can dive anywhere (random guess)
+                const randomZone = zones[Math.floor(Math.random() * zones.length)];
+                gkDiveClass = randomZone.diveClass;
+                
+                // Multiple miss trajectory types for variety
+                const missType = Math.floor(Math.random() * 6);
+                
+                switch(missType) {
+                    case 0:
+                        // Wide left miss
+                        endPercentX = -5 + Math.random() * 15;
+                        endY = goalTop - 20 - Math.random() * 40;
+                        break;
+                    case 1:
+                        // Wide right miss
+                        endPercentX = 90 + Math.random() * 15;
+                        endY = goalTop - 20 - Math.random() * 40;
+                        break;
+                    case 2:
+                        // High over the bar
+                        endPercentX = 40 + Math.random() * 20;
+                        endY = areaHeight - 20 - Math.random() * 30;
+                        break;
+                    case 3:
+                        // Skied shot
+                        endPercentX = 45 + Math.random() * 10;
+                        endY = areaHeight + 20;
+                        break;
+                    case 4:
+                        // Wide left and high
+                        endPercentX = 10 + Math.random() * 15;
+                        endY = areaHeight - 30 - Math.random() * 40;
+                        break;
+                    case 5:
+                        // Wide right and high
+                        endPercentX = 75 + Math.random() * 15;
+                        endY = areaHeight - 30 - Math.random() * 40;
+                        break;
+                    default:
+                        endPercentX = Math.random() < 0.5 ? 5 : 95;
+                        endY = goalTop - 30;
+                }
+            }
+            
+            // Start kicker animation
+            kicker.classList.add('kicking');
+            ball.classList.add('kicking');
+            
+            // Animate goalkeeper dive with new 6-direction system
+            setTimeout(() => {
+                // Remove all dive classes
+                goalkeeper.classList.remove(
+                    'dive-left-low', 'dive-left-high',
+                    'dive-right-low', 'dive-right-high',
+                    'dive-center-low', 'dive-center-high'
+                );
+                goalkeeper.style.top = '50%';
+                
+                // Apply the determined dive class
+                goalkeeper.classList.add(gkDiveClass);
+                
+                // Adjust goalkeeper horizontal position based on dive direction
+                if (gkDiveClass.includes('left')) {
+                    goalkeeper.style.left = 'calc(50% - 60px)';
+                } else if (gkDiveClass.includes('right')) {
+                    goalkeeper.style.left = 'calc(50% + 60px)';
+                } else {
+                    goalkeeper.style.left = '50%';
+                }
+            }, 250);
+            
+            // Animate ball movement with parabolic trajectory
+            // Small delay to let kicker animation start
+            setTimeout(() => {
+                // CRITICAL: Ensure ball is visible and at starting position BEFORE animation
+                // Make sure ball doesn't disappear
+                ball.style.display = 'block';
+                ball.style.opacity = '1';
+                ball.style.visibility = 'visible';
+                
+                // Set starting position explicitly
+                ball.style.left = `${startPercentX}%`;
+                ball.style.bottom = `${startY}px`;
+                ball.style.transform = 'translateX(-50%)';
+                
+                // Force a reflow to ensure position is set
+                ball.offsetHeight;
+                
+                // Adjust duration based on outcome - miss shots travel further
+                let animDuration = 900;
+                if (outcome === 'miss') {
+                    animDuration = 1100; // Longer duration for miss to show ball going wide/high
+                }
+                
+                // Start physics animation
+                animateBall(startPercentX, startY, endPercentX, endY, animDuration, () => {
+                    showResult(outcome);
+                    kickButton.disabled = false;
+                });
+            }, 350);
+        }
+
+        // Show result modal
+        function showResult(outcome) {
+            // Set modal content based on outcome
+            modalPopup.className = `modal-popup ${outcome}`;
+            
+            if (outcome === 'goal') {
+                modalIcon.textContent = '🎉';
+                modalTitle.textContent = 'GOAL!';
+                modalSubtitle.textContent = 'The ball is in the net!';
+            } else if (outcome === 'save') {
+                modalIcon.textContent = '🧤';
+                modalTitle.textContent = 'SAVED!';
+                modalSubtitle.textContent = 'The goalkeeper made a great save!';
+            } else {
+                modalIcon.textContent = '❌';
+                modalTitle.textContent = 'MISS!';
+                modalSubtitle.textContent = 'The shot went wide!';
+            }
+            
+            // Show modal with animation
+            resultModal.classList.add('show');
+        }
+        
+        // Close modal
+        function closeModal() {
+            resultModal.classList.remove('show');
+            resetAnimation();
+        }
+        
+        // Modal close button event
+        modalCloseBtn.addEventListener('click', closeModal);
+        
+        // Close modal when clicking overlay
+        resultModal.addEventListener('click', (e) => {
+            if (e.target === resultModal) {
+                closeModal();
+            }
+        });
+
+        // Handle kick button click
+        kickButton.addEventListener('click', function() {
+            resetAnimation();
+            
+            // Small delay to ensure reset is complete
+            setTimeout(() => {
+                const probability = calculateSuccessProbability();
+                const outcome = determineOutcome(probability);
+                animateKick(outcome);
+            }, 50);
+        });
+
+        // Initialize
+        resetAnimation();
+    </script>
+</body>
+</html>
