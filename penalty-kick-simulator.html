@@ -317,6 +317,83 @@
             cursor: not-allowed;
         }
 
+        /* Stats Tracker */
+        .stats-tracker {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border: 2px solid #dee2e6;
+        }
+
+        .stats-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px 5px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stat-item.goal-stat {
+            border-bottom: 3px solid #4CAF50;
+        }
+
+        .stat-item.save-stat {
+            border-bottom: 3px solid #2196F3;
+        }
+
+        .stat-item.miss-stat {
+            border-bottom: 3px solid #f44336;
+        }
+
+        .stat-count {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .goal-stat .stat-count { color: #4CAF50; }
+        .save-stat .stat-count { color: #2196F3; }
+        .miss-stat .stat-count { color: #f44336; }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .reset-stats-btn {
+            width: 100%;
+            padding: 10px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reset-stats-btn:hover {
+            background: #5a6268;
+        }
+
         /* Modal Overlay */
         .modal-overlay {
             position: fixed;
@@ -673,6 +750,26 @@
             </div>
 
             <button class="kick-button" id="kickButton">KICK!</button>
+            
+            <!-- Stats Tracker -->
+            <div class="stats-tracker">
+                <div class="stats-title">Session Stats</div>
+                <div class="stats-row">
+                    <div class="stat-item goal-stat">
+                        <div class="stat-count" id="goalCount">0</div>
+                        <div class="stat-label">Goals</div>
+                    </div>
+                    <div class="stat-item save-stat">
+                        <div class="stat-count" id="saveCount">0</div>
+                        <div class="stat-label">Saves</div>
+                    </div>
+                    <div class="stat-item miss-stat">
+                        <div class="stat-count" id="missCount">0</div>
+                        <div class="stat-label">Misses</div>
+                    </div>
+                </div>
+                <button class="reset-stats-btn" id="resetStatsBtn">Reset Stats</button>
+            </div>
         </div>
     </div>
 
@@ -694,6 +791,13 @@
             match: 'medium'
         };
 
+        // Stats tracking
+        const stats = {
+            goals: 0,
+            saves: 0,
+            misses: 0
+        };
+
         // DOM elements
         const ball = document.getElementById('ball');
         const kicker = document.getElementById('kicker');
@@ -708,6 +812,39 @@
         const modalTitle = document.getElementById('modalTitle');
         const modalSubtitle = document.getElementById('modalSubtitle');
         const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        // Stats elements
+        const goalCountEl = document.getElementById('goalCount');
+        const saveCountEl = document.getElementById('saveCount');
+        const missCountEl = document.getElementById('missCount');
+        const resetStatsBtn = document.getElementById('resetStatsBtn');
+
+        // Update stats display
+        function updateStatsDisplay() {
+            goalCountEl.textContent = stats.goals;
+            saveCountEl.textContent = stats.saves;
+            missCountEl.textContent = stats.misses;
+        }
+
+        // Reset stats
+        function resetStats() {
+            stats.goals = 0;
+            stats.saves = 0;
+            stats.misses = 0;
+            updateStatsDisplay();
+        }
+
+        // Increment stat based on outcome
+        function incrementStat(outcome) {
+            if (outcome === 'goal') {
+                stats.goals++;
+            } else if (outcome === 'save') {
+                stats.saves++;
+            } else if (outcome === 'miss') {
+                stats.misses++;
+            }
+            updateStatsDisplay();
+        }
 
         // Toggle functionality
         toggleOptions.forEach(option => {
@@ -1114,6 +1251,9 @@
 
         // Show result modal
         function showResult(outcome) {
+            // Increment stats
+            incrementStat(outcome);
+            
             // Set modal content based on outcome
             modalPopup.className = `modal-popup ${outcome}`;
             
@@ -1143,6 +1283,9 @@
         
         // Modal close button event
         modalCloseBtn.addEventListener('click', closeModal);
+
+        // Reset stats button event
+        resetStatsBtn.addEventListener('click', resetStats);
         
         // Close modal when clicking overlay
         resultModal.addEventListener('click', (e) => {
