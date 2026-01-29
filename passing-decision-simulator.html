@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passing Decision Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: linear-gradient(to bottom, #FFFFFF 0%, #F5F5F5 100%);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            border: 3px solid #2E7D32;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2E7D32;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Scenario Indicator */
+        .scenario-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .scenario-label {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .scenario-name {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        /* Field Area */
+        .field-area {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(to bottom, #4CAF50 0%, #4CAF50 60%, #388E3C 100%);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 3px solid #fff;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Field markings */
+        .field-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 80px;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Goal */
+        .goal {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 3px solid #fff;
+            border-top: none;
+        }
+
+        /* Player base styles */
+        .player {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: white;
+            cursor: default;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            z-index: 5;
+        }
+
+        /* Responsive: smaller players on small screens */
+        @media (max-width: 600px) {
+            .player {
+                width: 32px;
+                height: 32px;
+                font-size: 0.6em;
+            }
+            
+            .player.goalkeeper {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .player .risk-indicator {
+                font-size: 0.5em !important;
+                padding: 1px 4px !important;
+                bottom: -15px !important;
+            }
+            
+            .field-area {
+                height: 300px !important;
+            }
+        }
+
+        /* You (the passer) */
+        .player.passer {
+            background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%);
+            border: 3px solid #fff;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.6);
+            z-index: 10;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Player type color variations */
+        .player.passer.playmaker {
+            background: linear-gradient(135deg, #9C27B0 0%, #6A1B9A 100%); /* Purple - creative */
+            box-shadow: 0 0 15px rgba(156, 39, 176, 0.6);
+        }
+
+        .player.passer.engine {
+            background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%); /* Blue - reliable */
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.6);
+        }
+
+        .player.passer.maestro {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); /* Orange - vision */
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.6);
+        }
+
+        /* Passer position adjustments for wing scenarios */
+        .player.passer.left-wing {
+            transform: translateX(-30%);
+        }
+
+        .player.passer.right-wing {
+            transform: translateX(-70%);
+        }
+
+        .player.passer.center {
+            transform: translateX(-50%);
+        }
+
+        /* Ball indicator */
+        .player.passer::after {
+            content: '⚽';
+            position: absolute;
+            bottom: -20px;
+            font-size: 16px;
+        }
+
+        /* Teammates */
+        .player.teammate {
+            background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%);
+            border: 3px solid #64B5F6;
+            cursor: pointer;
+        }
+
+        .player.teammate:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.8);
+            z-index: 20;
+        }
+
+        .player.teammate.selected {
+            border-color: #FFEB3B;
+            box-shadow: 0 0 25px rgba(255, 235, 59, 0.9);
+        }
+
+        /* Teammate receiving through ball animation */
+        .player.teammate.receiving {
+            transition: left 0.6s ease-out, top 0.6s ease-out;
+            z-index: 25;
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.9);
+        }
+
+        .player.teammate .risk-indicator {
+            position: absolute;
+            bottom: -18px;
+            font-size: 0.65em;
+            padding: 2px 6px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+
+        .risk-low { background: #1B5E20; }
+        .risk-medium { background: #FF9800; }
+        .risk-high { background: #f44336; }
+
+        /* Defenders */
+        .player.defender {
+            background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+            border: 3px solid #ef9a9a;
+            transition: all 0.4s ease-out;
+        }
+
+        .player.defender.intercepting {
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(244, 67, 54, 0.8);
+            z-index: 25;
+        }
+
+        .player.defender.hidden {
+            display: none !important;
+        }
+
+        /* Goalkeeper */
+        .player.goalkeeper {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            border: 3px solid #FFB74D;
+            width: 45px;
+            height: 45px;
+            font-size: 0.65em;
+            z-index: 4; /* Below teammates so they're clickable */
+        }
+
+        .player.goalkeeper.hidden {
+            display: none !important;
+        }
+
+        .player.goalkeeper.diving {
+            animation: goalkeeperDive 0.5s ease-out forwards;
+        }
+
+        /* Ensure teammates are always clickable above goalkeeper */
+        .player.teammate {
+            z-index: 8;
+        }
+
+        /* Striker has highest z-index among teammates */
+        #striker {
+            z-index: 9;
+        }
+
+        @keyframes goalkeeperDive {
+            0% { transform: translateX(0) rotate(0deg); }
+            100% { transform: translateX(-30px) rotate(-20deg); }
+        }
+
+        /* Shot line for goal animation */
+        .shot-line {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transform-origin: left center;
+            opacity: 0;
+            z-index: 5;
+            border-radius: 2px;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
+        }
+
+        .shot-line.active {
+            opacity: 1;
+        }
+
+        /* Goal celebration effect */
+        .goal-flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(76, 175, 80, 0.3);
+            animation: goalFlash 0.5s ease-out;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        @keyframes goalFlash {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Pass trajectory line */
+        .pass-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, #FFEB3B, #FFC107);
+            transform-origin: left center;
+            opacity: 0;
+            z-index: 5;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+        }
+
+        .pass-line.active {
+            opacity: 1;
+        }
+
+        /* Preview trajectory line (shown on selection) */
+        .pass-line.preview {
+            opacity: 1;
+            height: 5px;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 8px,
+                currentColor 8px,
+                currentColor 16px
+            ) !important;
+        }
+
+        /* Risk-based line colors */
+        .pass-line.risk-high {
+            background: linear-gradient(90deg, #f44336, #ff5252) !important;
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.8), 0 0 30px rgba(244, 67, 54, 0.5);
+        }
+        .pass-line.risk-high.preview {
+            background: repeating-linear-gradient(
+                90deg,
+                #f44336,
+                #f44336 10px,
+                transparent 10px,
+                transparent 18px
+            ) !important;
+            box-shadow: 0 0 20px rgba(244, 67, 54, 0.9), 0 0 40px rgba(244, 67, 54, 0.6);
+        }
+
+        .pass-line.risk-medium {
+            background: linear-gradient(90deg, #FF9800, #FFB74D) !important;
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.8), 0 0 30px rgba(255, 152, 0, 0.5);
+        }
+        .pass-line.risk-medium.preview {
+            background: repeating-linear-gradient(
+                90deg,
+                #FF9800,
+                #FF9800 10px,
+                transparent 10px,
+                transparent 18px
+            ) !important;
+            box-shadow: 0 0 20px rgba(255, 152, 0, 0.9), 0 0 40px rgba(255, 152, 0, 0.6);
+        }
+
+        .pass-line.risk-low {
+            background: linear-gradient(90deg, #1B5E20, #2E7D32) !important;
+            box-shadow: 0 0 15px rgba(27, 94, 32, 0.8), 0 0 30px rgba(27, 94, 32, 0.5);
+        }
+        .pass-line.risk-low.preview {
+            background: repeating-linear-gradient(
+                90deg,
+                #1B5E20,
+                #1B5E20 10px,
+                transparent 10px,
+                transparent 18px
+            ) !important;
+            box-shadow: 0 0 20px rgba(27, 94, 32, 0.9), 0 0 40px rgba(46, 125, 50, 0.6);
+        }
+
+        /* Ball animation */
+        .ball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            z-index: 15;
+            opacity: 0;
+            transition: none;
+        }
+
+        .ball img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Instruction text */
+        .instruction {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 0.9em;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .control-label {
+            font-weight: 600;
+            min-width: 100px;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .toggle-option {
+            padding: 8px 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+            font-weight: 500;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            min-width: 0;
+            text-align: center;
+        }
+
+        .toggle-option:hover {
+            border-color: #2196F3;
+            background: #E3F2FD;
+        }
+
+        .toggle-option.active {
+            background: #2196F3 !important;
+            color: white !important;
+            border-color: #2196F3 !important;
+        }
+
+        /* Pass Button */
+        .pass-button {
+            width: 100% !important;
+            padding: 18px !important;
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 10px !important;
+            font-size: 1.3em !important;
+            font-weight: bold !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            margin-top: 10px !important;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4) !important;
+        }
+
+        .pass-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 125, 50, 0.6) !important;
+        }
+
+        .pass-button:disabled {
+            opacity: 0.6 !important;
+            cursor: not-allowed !important;
+        }
+
+        /* Stats Tracker */
+        .stats-tracker {
+            margin-top: 20px !important;
+            padding: 15px !important;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+            border-radius: 12px !important;
+            border: 2px solid #dee2e6 !important;
+        }
+
+        .stats-title {
+            text-align: center !important;
+            font-weight: bold !important;
+            font-size: 1em !important;
+            color: #333 !important;
+            margin-bottom: 12px !important;
+        }
+
+        .stats-row {
+            display: flex !important;
+            justify-content: space-around !important;
+            gap: 8px !important;
+            margin-bottom: 12px !important;
+        }
+
+        .stat-item {
+            flex: 1 !important;
+            text-align: center !important;
+            padding: 8px 4px !important;
+            border-radius: 8px !important;
+            background: white !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+            min-width: 50px !important;
+        }
+
+        .stat-item.complete-stat { border-bottom: 3px solid #4CAF50 !important; }
+        .stat-item.intercept-stat { border-bottom: 3px solid #f44336 !important; }
+        .stat-item.assist-stat { border-bottom: 3px solid #FF9800 !important; }
+        .stat-item.accuracy-stat { border-bottom: 3px solid #2196F3 !important; }
+
+        .stat-count {
+            font-size: 1.5em !important;
+            font-weight: bold !important;
+        }
+
+        .complete-stat .stat-count { color: #4CAF50 !important; }
+        .intercept-stat .stat-count { color: #f44336 !important; }
+        .assist-stat .stat-count { color: #FF9800 !important; }
+        .accuracy-stat .stat-count { color: #2196F3 !important; }
+
+        .stat-label {
+            font-size: 0.75em !important;
+            color: #666 !important;
+        }
+
+        .reset-stats-btn {
+            width: 100% !important;
+            padding: 10px !important;
+            background: #6c757d !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-size: 0.9em !important;
+            cursor: pointer !important;
+        }
+
+        .reset-stats-btn:hover {
+            background: #5a6268 !important;
+        }
+
+        /* Player Stats Panel */
+        .player-stats-panel {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            color: white;
+            border: 2px solid #0f3460;
+            transition: border-color 0.3s ease;
+        }
+
+        .player-stats-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .player-type-icon {
+            font-size: 1.5em;
+        }
+
+        .player-type-name {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .player-type-desc {
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.6);
+            margin-left: auto;
+        }
+
+        .player-stats-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-bar-label {
+            font-size: 0.8em;
+            width: 85px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .stat-bar-container {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .stat-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease, background 0.4s ease;
+        }
+
+        .stat-bar-value {
+            font-size: 0.8em;
+            font-weight: bold;
+            width: 40px;
+            text-align: right;
+        }
+
+        /* Player type specific colors for bars */
+        .player-stats-panel.playmaker .stat-bar {
+            background: linear-gradient(90deg, #9C27B0, #E040FB);
+        }
+        .player-stats-panel.playmaker {
+            border-color: #9C27B0;
+        }
+        .player-stats-panel.playmaker .stat-bar-value {
+            color: #E040FB;
+        }
+
+        .player-stats-panel.engine .stat-bar {
+            background: linear-gradient(90deg, #2196F3, #03A9F4);
+        }
+        .player-stats-panel.engine {
+            border-color: #2196F3;
+        }
+        .player-stats-panel.engine .stat-bar-value {
+            color: #03A9F4;
+        }
+
+        .player-stats-panel.maestro .stat-bar {
+            background: linear-gradient(90deg, #FF9800, #FFC107);
+        }
+        .player-stats-panel.maestro {
+            border-color: #FF9800;
+        }
+        .player-stats-panel.maestro .stat-bar-value {
+            color: #FFC107;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.85) !important;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999999 !important;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex !important;
+            opacity: 1;
+        }
+
+        .modal-popup {
+            background: white !important;
+            border-radius: 16px;
+            padding: 30px 40px;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            max-width: 350px;
+            width: 90%;
+            z-index: 1000000 !important;
+        }
+
+        .modal-overlay.show .modal-popup {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .modal-subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .modal-tip {
+            font-size: 0.85em;
+            color: #888;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .modal-close-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+        }
+
+        /* Result-specific modal styles */
+        .modal-popup.complete .modal-close-btn { background: linear-gradient(135deg, #4CAF50, #2E7D32); }
+        .modal-popup.intercept .modal-close-btn { background: linear-gradient(135deg, #f44336, #c62828); }
+        .modal-popup.assist .modal-close-btn { background: linear-gradient(135deg, #FF9800, #F57C00); }
+
+        .modal-popup.complete { border-top: 5px solid #4CAF50; }
+        .modal-popup.intercept { border-top: 5px solid #f44336; }
+        .modal-popup.assist { border-top: 5px solid #FF9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ Passing Decision Trainer</h1>
+            <p>Choose the best passing option based on the situation</p>
+        </div>
+
+        <!-- Scenario Indicator -->
+        <div class="scenario-bar">
+            <span class="scenario-label">SCENARIO:</span>
+            <span class="scenario-name" id="scenarioName">Counter Attack</span>
+        </div>
+
+        <!-- Field Area -->
+        <div class="field-area" id="fieldArea">
+            <div class="goal"></div>
+            
+            <!-- Teammates (clickable targets) -->
+            <div class="player teammate" id="striker" data-target="striker">
+                ST
+                <span class="risk-indicator risk-high">High Risk</span>
+            </div>
+            <div class="player teammate" id="wingerLeft" data-target="wingerLeft">
+                LW
+                <span class="risk-indicator risk-medium">Medium</span>
+            </div>
+            <div class="player teammate" id="wingerRight" data-target="wingerRight">
+                RW
+                <span class="risk-indicator risk-medium">Medium</span>
+            </div>
+            <div class="player teammate" id="midfielder" data-target="midfielder">
+                CM
+                <span class="risk-indicator risk-low">Safe</span>
+            </div>
+
+            <!-- Defenders -->
+            <div class="player defender" id="defender1">DEF</div>
+            <div class="player defender" id="defender2">DEF</div>
+            <div class="player defender" id="defender3">DEF</div>
+            <div class="player defender" id="defender4">DEF</div>
+            
+            <!-- Goalkeeper -->
+            <div class="player goalkeeper" id="goalkeeper">GK</div>
+
+            <!-- You (the passer) -->
+            <div class="player passer" id="passer">YOU</div>
+
+            <!-- Ball for animation -->
+            <div class="ball" id="ball">
+                <img src="https://em-content.zobj.net/source/twitter/376/soccer-ball_26bd.png" alt="Ball">
+            </div>
+
+            <!-- Pass trajectory line -->
+            <div class="pass-line" id="passLine"></div>
+            
+            <!-- Shot line for goal animation -->
+            <div class="shot-line" id="shotLine"></div>
+
+            <!-- Instruction -->
+            <div class="instruction" id="instruction">Click a teammate to select your pass target</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="control-row">
+                <span class="control-label">Player Type:</span>
+                <div class="toggle-group">
+                    <div class="toggle-option" data-value="playmaker" data-type="playerType">Playmaker</div>
+                    <div class="toggle-option active" data-value="engine" data-type="playerType">Engine</div>
+                    <div class="toggle-option" data-value="maestro" data-type="playerType">Maestro</div>
+                </div>
+            </div>
+
+            <!-- Player Stats Display -->
+            <div class="player-stats-panel" id="playerStatsPanel">
+                <div class="player-stats-header">
+                    <span class="player-type-icon" id="playerTypeIcon">⚙️</span>
+                    <span class="player-type-name" id="playerTypeName">Engine</span>
+                    <span class="player-type-desc" id="playerTypeDesc">Reliable & Safe</span>
+                </div>
+                <div class="player-stats-bars">
+                    <div class="stat-bar-row">
+                        <span class="stat-bar-label">Ground Pass</span>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="groundBar" style="width: 75%"></div>
+                        </div>
+                        <span class="stat-bar-value" id="groundValue">+15%</span>
+                    </div>
+                    <div class="stat-bar-row">
+                        <span class="stat-bar-label">Through Ball</span>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="throughBar" style="width: 25%"></div>
+                        </div>
+                        <span class="stat-bar-value" id="throughValue">+5%</span>
+                    </div>
+                    <div class="stat-bar-row">
+                        <span class="stat-bar-label">Lob Pass</span>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="lobBar" style="width: 0%"></div>
+                        </div>
+                        <span class="stat-bar-value" id="lobValue">+0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <span class="control-label">Pressure:</span>
+                <div class="toggle-group">
+                    <div class="toggle-option active" data-value="low" data-type="pressure">Low</div>
+                    <div class="toggle-option" data-value="medium" data-type="pressure">Medium</div>
+                    <div class="toggle-option" data-value="high" data-type="pressure">High</div>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <span class="control-label">Pass Type:</span>
+                <div class="toggle-group">
+                    <div class="toggle-option active" data-value="ground" data-type="passType">Ground</div>
+                    <div class="toggle-option" data-value="through" data-type="passType">Through Ball</div>
+                    <div class="toggle-option" data-value="lob" data-type="passType">Lob</div>
+                </div>
+            </div>
+
+            <button class="pass-button" id="passButton" disabled>SELECT A TARGET</button>
+
+            <!-- Stats Tracker -->
+            <div class="stats-tracker">
+                <div class="stats-title">Session Stats</div>
+                <div class="stats-row">
+                    <div class="stat-item complete-stat">
+                        <div class="stat-count" id="completeCount">0</div>
+                        <div class="stat-label">Complete</div>
+                    </div>
+                    <div class="stat-item intercept-stat">
+                        <div class="stat-count" id="interceptCount">0</div>
+                        <div class="stat-label">Intercepted</div>
+                    </div>
+                    <div class="stat-item assist-stat">
+                        <div class="stat-count" id="assistCount">0</div>
+                        <div class="stat-label">Assists</div>
+                    </div>
+                    <div class="stat-item accuracy-stat">
+                        <div class="stat-count" id="accuracyCount">0%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                </div>
+                <button class="reset-stats-btn" id="resetStatsBtn">Reset Stats</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-popup" id="modalPopup">
+            <div class="modal-icon" id="modalIcon"></div>
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-subtitle" id="modalSubtitle"></div>
+            <div class="modal-tip" id="modalTip"></div>
+            <button class="modal-close-btn" id="modalCloseBtn">Next Scenario</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        const state = {
+            playerType: 'engine',
+            pressure: 'low',
+            passType: 'ground',
+            selectedTarget: null,
+            isAnimating: false
+        };
+
+        // Stats tracking
+        const stats = {
+            complete: 0,
+            intercept: 0,
+            assist: 0,
+            total: 0
+        };
+
+        // Scenarios define player positions and optimal choices
+        // hideDefenders array specifies which defenders to hide for this scenario
+        // showGoalkeeper: true/false to show the goalkeeper
+        const scenarios = [
+            // === BASIC 2 DEFENDER SCENARIOS ===
+            {
+                name: 'Counter Attack',
+                positions: {
+                    striker: { top: 60, left: 50 },
+                    wingerLeft: { top: 120, left: 20 },
+                    wingerRight: { top: 120, left: 80 },
+                    midfielder: { top: 200, left: 50 },
+                    defender1: { top: 100, left: 40 },
+                    defender2: { top: 100, left: 60 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['defender3', 'defender4', 'goalkeeper'],
+                optimalTarget: 'wingerRight',
+                tip: 'In counter attacks, look for runners in space on the flanks!'
+            },
+            {
+                name: 'Build Up Play',
+                positions: {
+                    striker: { top: 50, left: 50 },
+                    wingerLeft: { top: 100, left: 15 },
+                    wingerRight: { top: 100, left: 85 },
+                    midfielder: { top: 180, left: 35 },
+                    defender1: { top: 80, left: 45 },
+                    defender2: { top: 120, left: 55 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['defender3', 'defender4', 'goalkeeper'],
+                optimalTarget: 'midfielder',
+                tip: 'In build-up play, patience is key. The safe pass keeps possession!'
+            },
+
+            // === 3-4 DEFENDER SCENARIOS ===
+            {
+                name: 'Packed Defense',
+                positions: {
+                    striker: { top: 45, left: 50 },
+                    wingerLeft: { top: 85, left: 15 },
+                    wingerRight: { top: 85, left: 85 },
+                    midfielder: { top: 180, left: 50 },
+                    defender1: { top: 70, left: 35 },
+                    defender2: { top: 70, left: 50 },
+                    defender3: { top: 70, left: 65 },
+                    defender4: { top: 110, left: 50 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['goalkeeper'],
+                optimalTarget: 'wingerLeft',
+                tip: 'Against a packed defense, find the player in space wide!'
+            },
+            {
+                name: 'Low Block',
+                positions: {
+                    striker: { top: 55, left: 45 },
+                    wingerLeft: { top: 80, left: 20 },
+                    wingerRight: { top: 80, left: 80 },
+                    midfielder: { top: 160, left: 55 },
+                    defender1: { top: 60, left: 30 },
+                    defender2: { top: 60, left: 45 },
+                    defender3: { top: 60, left: 60 },
+                    defender4: { top: 60, left: 75 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['goalkeeper'],
+                optimalTarget: 'midfielder',
+                tip: 'Against a low block, recycle possession and probe for openings!'
+            },
+            {
+                name: 'Man Marking',
+                positions: {
+                    striker: { top: 50, left: 50 },
+                    wingerLeft: { top: 90, left: 25 },
+                    wingerRight: { top: 90, left: 75 },
+                    midfielder: { top: 170, left: 50 },
+                    defender1: { top: 55, left: 48 },
+                    defender2: { top: 95, left: 27 },
+                    defender3: { top: 95, left: 73 },
+                    defender4: { top: 175, left: 52 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['goalkeeper'],
+                optimalTarget: 'striker',
+                tip: 'When everyone is man-marked, a quick pass to the striker can beat the press!'
+            },
+
+            // === GOALKEEPER SCENARIOS ===
+            {
+                name: '1v1 with Keeper',
+                positions: {
+                    striker: { top: 40, left: 50 },
+                    wingerLeft: { top: 70, left: 25 },
+                    wingerRight: { top: 70, left: 75 },
+                    midfielder: { top: 180, left: 50 },
+                    defender1: { top: 90, left: 40 },
+                    defender2: { top: 90, left: 60 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 30, left: 55 }
+                },
+                hideDefenders: ['defender3', 'defender4'],
+                optimalTarget: 'wingerLeft',
+                tip: 'When the keeper closes down, square it to a teammate for an easy finish!'
+            },
+            {
+                name: 'Keeper Off Line',
+                positions: {
+                    striker: { top: 35, left: 40 },
+                    wingerLeft: { top: 60, left: 20 },
+                    wingerRight: { top: 55, left: 70 },
+                    midfielder: { top: 160, left: 45 },
+                    defender1: { top: 65, left: 35 },
+                    defender2: { top: 80, left: 55 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 25, left: 35 }
+                },
+                hideDefenders: ['defender3', 'defender4'],
+                optimalTarget: 'wingerRight',
+                tip: 'When the keeper is off their line, the far post is open!'
+            },
+            {
+                name: 'Keeper Sweeping',
+                positions: {
+                    striker: { top: 50, left: 55 },
+                    wingerLeft: { top: 70, left: 15 },
+                    wingerRight: { top: 70, left: 85 },
+                    midfielder: { top: 170, left: 50 },
+                    defender1: { top: 80, left: 40 },
+                    defender2: { top: 100, left: 60 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 55, left: 50 }
+                },
+                hideDefenders: ['defender3', 'defender4'],
+                optimalTarget: 'wingerLeft',
+                tip: 'A sweeper keeper covers central areas - exploit the wide spaces!'
+            },
+
+            // === ONLY ONE OPEN PLAYER ===
+            {
+                name: 'Only One Option',
+                positions: {
+                    striker: { top: 45, left: 50 },
+                    wingerLeft: { top: 90, left: 10 },
+                    wingerRight: { top: 90, left: 90 },
+                    midfielder: { top: 180, left: 50 },
+                    defender1: { top: 50, left: 48 },
+                    defender2: { top: 95, left: 88 },
+                    defender3: { top: 175, left: 48 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['defender4', 'goalkeeper'],
+                optimalTarget: 'wingerLeft',
+                tip: 'Sometimes only one player is open - find them quickly!'
+            },
+            {
+                name: 'Tight Spaces',
+                positions: {
+                    striker: { top: 50, left: 45 },
+                    wingerLeft: { top: 80, left: 25 },
+                    wingerRight: { top: 80, left: 75 },
+                    midfielder: { top: 200, left: 50 },
+                    defender1: { top: 55, left: 43 },
+                    defender2: { top: 85, left: 27 },
+                    defender3: { top: 85, left: 73 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['defender4', 'goalkeeper'],
+                optimalTarget: 'midfielder',
+                tip: 'When teammates are tightly marked, the back pass is the smart option!'
+            },
+
+            // === UNIQUE GAME SITUATIONS ===
+            {
+                name: 'Last Minute Attack',
+                positions: {
+                    striker: { top: 35, left: 50 },
+                    wingerLeft: { top: 50, left: 25 },
+                    wingerRight: { top: 50, left: 75 },
+                    midfielder: { top: 130, left: 50 },
+                    defender1: { top: 45, left: 40 },
+                    defender2: { top: 45, left: 60 },
+                    defender3: { top: 70, left: 50 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 20, left: 50 }
+                },
+                hideDefenders: ['defender4'],
+                optimalTarget: 'striker',
+                tip: 'In desperate moments, the direct ball to the striker can win the game!'
+            },
+            {
+                name: 'Crowded Box',
+                positions: {
+                    striker: { top: 40, left: 55 },
+                    wingerLeft: { top: 55, left: 30 },
+                    wingerRight: { top: 55, left: 80 },
+                    midfielder: { top: 150, left: 45 },
+                    defender1: { top: 45, left: 45 },
+                    defender2: { top: 45, left: 65 },
+                    defender3: { top: 60, left: 35 },
+                    defender4: { top: 60, left: 75 },
+                    goalkeeper: { top: 25, left: 50 }
+                },
+                hideDefenders: [],
+                optimalTarget: 'wingerRight',
+                tip: 'In a crowded box, the player at the edge often has the best angle!'
+            },
+            {
+                name: 'Wing Overload',
+                positions: {
+                    striker: { top: 45, left: 35 },
+                    wingerLeft: { top: 70, left: 15 },
+                    wingerRight: { top: 100, left: 90 },
+                    midfielder: { top: 160, left: 40 },
+                    defender1: { top: 55, left: 30 },
+                    defender2: { top: 75, left: 20 },
+                    defender3: { top: 100, left: 35 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['defender4', 'goalkeeper'],
+                optimalTarget: 'wingerRight',
+                tip: 'When defenders overcommit to one side, switch play immediately!'
+            },
+            {
+                name: 'Breakaway',
+                positions: {
+                    striker: { top: 40, left: 50 },
+                    wingerLeft: { top: 80, left: 30 },
+                    wingerRight: { top: 80, left: 70 },
+                    midfielder: { top: 200, left: 50 },
+                    defender1: { top: 120, left: 45 },
+                    defender2: { top: 120, left: 55 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 30, left: 50 }
+                },
+                hideDefenders: ['defender3', 'defender4'],
+                optimalTarget: 'striker',
+                tip: 'On a breakaway, the through ball to the striker beats the keeper!'
+            },
+            {
+                name: 'Through Ball Lane',
+                positions: {
+                    striker: { top: 30, left: 60 },
+                    wingerLeft: { top: 90, left: 15 },
+                    wingerRight: { top: 70, left: 85 },
+                    midfielder: { top: 180, left: 45 },
+                    defender1: { top: 60, left: 45 },
+                    defender2: { top: 85, left: 70 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 20, left: 50 }
+                },
+                hideDefenders: ['defender3', 'defender4'],
+                optimalTarget: 'striker',
+                tip: 'When you see a through ball lane, take it!'
+            },
+            {
+                name: 'High Press',
+                positions: {
+                    striker: { top: 100, left: 50 },
+                    wingerLeft: { top: 150, left: 20 },
+                    wingerRight: { top: 150, left: 80 },
+                    midfielder: { top: 220, left: 50 },
+                    defender1: { top: 180, left: 35 },
+                    defender2: { top: 180, left: 65 },
+                    defender3: { top: 210, left: 50 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['defender4', 'goalkeeper'],
+                optimalTarget: 'striker',
+                tip: 'Beat the high press by going long to the striker!'
+            },
+            {
+                name: 'Wide Free Player',
+                positions: {
+                    striker: { top: 50, left: 50 },
+                    wingerLeft: { top: 80, left: 5 },
+                    wingerRight: { top: 100, left: 70 },
+                    midfielder: { top: 170, left: 55 },
+                    defender1: { top: 55, left: 48 },
+                    defender2: { top: 105, left: 68 },
+                    defender3: { top: 175, left: 57 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['defender4', 'goalkeeper'],
+                optimalTarget: 'wingerLeft',
+                tip: 'The completely free wide player should always be found!'
+            },
+            {
+                name: 'Recovery Run',
+                positions: {
+                    striker: { top: 45, left: 55 },
+                    wingerLeft: { top: 75, left: 25 },
+                    wingerRight: { top: 60, left: 80 },
+                    midfielder: { top: 180, left: 50 },
+                    defender1: { top: 90, left: 50 },
+                    defender2: { top: 110, left: 65 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 25, left: 50 }
+                },
+                hideDefenders: ['defender3', 'defender4'],
+                optimalTarget: 'wingerRight',
+                tip: 'Attack before the defenders can recover their position!'
+            },
+            {
+                name: 'Penalty Box Chaos',
+                positions: {
+                    striker: { top: 35, left: 45 },
+                    wingerLeft: { top: 50, left: 25 },
+                    wingerRight: { top: 45, left: 70 },
+                    midfielder: { top: 140, left: 50 },
+                    defender1: { top: 40, left: 35 },
+                    defender2: { top: 40, left: 55 },
+                    defender3: { top: 55, left: 30 },
+                    defender4: { top: 50, left: 65 },
+                    goalkeeper: { top: 25, left: 50 }
+                },
+                hideDefenders: [],
+                optimalTarget: 'wingerRight',
+                tip: 'In chaos, find the player with the clearest sight of goal!'
+            },
+
+            // === LEFT WING SCENARIOS (Passer on left side) ===
+            {
+                name: 'Left Wing Cross',
+                passerPosition: { bottom: 120, left: 10 },
+                positions: {
+                    striker: { top: 45, left: 50 },
+                    wingerLeft: { top: 80, left: 30 },
+                    wingerRight: { top: 60, left: 75 },
+                    midfielder: { top: 150, left: 40 },
+                    defender1: { top: 55, left: 45 },
+                    defender2: { top: 55, left: 60 },
+                    defender3: { top: 85, left: 35 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 30, left: 50 }
+                },
+                hideDefenders: ['defender4'],
+                optimalTarget: 'striker',
+                tip: 'From the wing, the early cross to the striker catches defenders off guard!'
+            },
+            {
+                name: 'Left Wing Cutback',
+                passerPosition: { bottom: 100, left: 8 },
+                positions: {
+                    striker: { top: 50, left: 55 },
+                    wingerLeft: { top: 90, left: 25 },
+                    wingerRight: { top: 70, left: 80 },
+                    midfielder: { top: 130, left: 35 },
+                    defender1: { top: 60, left: 40 },
+                    defender2: { top: 75, left: 55 },
+                    defender3: { top: 100, left: 30 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 35, left: 50 }
+                },
+                hideDefenders: ['defender4'],
+                optimalTarget: 'midfielder',
+                tip: 'The cutback to the edge of the box gives a shooting opportunity!'
+            },
+            {
+                name: 'Left Wing Overlap',
+                passerPosition: { bottom: 150, left: 15 },
+                positions: {
+                    striker: { top: 55, left: 50 },
+                    wingerLeft: { top: 100, left: 5 },
+                    wingerRight: { top: 90, left: 85 },
+                    midfielder: { top: 170, left: 45 },
+                    defender1: { top: 70, left: 40 },
+                    defender2: { top: 110, left: 20 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['defender3', 'defender4', 'goalkeeper'],
+                optimalTarget: 'wingerLeft',
+                tip: 'Use the overlapping fullback to stretch the defense!'
+            },
+            {
+                name: 'Left Wing 1v1',
+                passerPosition: { bottom: 110, left: 12 },
+                positions: {
+                    striker: { top: 40, left: 50 },
+                    wingerLeft: { top: 70, left: 35 },
+                    wingerRight: { top: 65, left: 70 },
+                    midfielder: { top: 160, left: 50 },
+                    defender1: { top: 100, left: 15 },
+                    defender2: { top: 80, left: 55 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 25, left: 50 }
+                },
+                hideDefenders: ['defender3', 'defender4'],
+                optimalTarget: 'wingerRight',
+                tip: 'Beat your man and find the far post runner!'
+            },
+
+            // === RIGHT WING SCENARIOS (Passer on right side) ===
+            {
+                name: 'Right Wing Cross',
+                passerPosition: { bottom: 120, left: 90 },
+                positions: {
+                    striker: { top: 45, left: 50 },
+                    wingerLeft: { top: 60, left: 25 },
+                    wingerRight: { top: 80, left: 70 },
+                    midfielder: { top: 150, left: 60 },
+                    defender1: { top: 55, left: 40 },
+                    defender2: { top: 55, left: 55 },
+                    defender3: { top: 85, left: 65 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 30, left: 50 }
+                },
+                hideDefenders: ['defender4'],
+                optimalTarget: 'striker',
+                tip: 'Whip in the cross to the striker making a near post run!'
+            },
+            {
+                name: 'Right Wing Cutback',
+                passerPosition: { bottom: 100, left: 92 },
+                positions: {
+                    striker: { top: 50, left: 45 },
+                    wingerLeft: { top: 70, left: 20 },
+                    wingerRight: { top: 90, left: 75 },
+                    midfielder: { top: 130, left: 65 },
+                    defender1: { top: 60, left: 55 },
+                    defender2: { top: 75, left: 40 },
+                    defender3: { top: 100, left: 70 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 35, left: 50 }
+                },
+                hideDefenders: ['defender4'],
+                optimalTarget: 'midfielder',
+                tip: 'Cut it back for the onrushing midfielder!'
+            },
+            {
+                name: 'Right Wing Switch',
+                passerPosition: { bottom: 140, left: 88 },
+                positions: {
+                    striker: { top: 60, left: 50 },
+                    wingerLeft: { top: 80, left: 10 },
+                    wingerRight: { top: 110, left: 75 },
+                    midfielder: { top: 160, left: 55 },
+                    defender1: { top: 90, left: 60 },
+                    defender2: { top: 120, left: 70 },
+                    defender3: { top: 100, left: 50 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['defender4', 'goalkeeper'],
+                optimalTarget: 'wingerLeft',
+                tip: 'Switch the play to the unmarked winger on the far side!'
+            },
+            {
+                name: 'Right Wing Byline',
+                passerPosition: { bottom: 90, left: 95 },
+                positions: {
+                    striker: { top: 40, left: 45 },
+                    wingerLeft: { top: 55, left: 25 },
+                    wingerRight: { top: 75, left: 65 },
+                    midfielder: { top: 120, left: 55 },
+                    defender1: { top: 50, left: 50 },
+                    defender2: { top: 65, left: 60 },
+                    defender3: { top: -100, left: 0 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 30, left: 45 }
+                },
+                hideDefenders: ['defender3', 'defender4'],
+                optimalTarget: 'wingerLeft',
+                tip: 'From the byline, the far post is always dangerous!'
+            },
+
+            // === DEEP PLAYMAKER SCENARIOS (Passer deeper) ===
+            {
+                name: 'Deep Playmaker',
+                passerPosition: { bottom: 40, left: 50 },
+                positions: {
+                    striker: { top: 50, left: 50 },
+                    wingerLeft: { top: 90, left: 20 },
+                    wingerRight: { top: 90, left: 80 },
+                    midfielder: { top: 140, left: 45 },
+                    defender1: { top: 80, left: 45 },
+                    defender2: { top: 80, left: 55 },
+                    defender3: { top: 120, left: 35 },
+                    defender4: { top: 120, left: 65 },
+                    goalkeeper: { top: -100, left: 0 }
+                },
+                hideDefenders: ['goalkeeper'],
+                optimalTarget: 'wingerRight',
+                tip: 'From deep, the long ball to the winger stretches the defense!'
+            },
+            {
+                name: 'Quarterback Pass',
+                passerPosition: { bottom: 30, left: 45 },
+                positions: {
+                    striker: { top: 35, left: 55 },
+                    wingerLeft: { top: 70, left: 15 },
+                    wingerRight: { top: 60, left: 85 },
+                    midfielder: { top: 130, left: 50 },
+                    defender1: { top: 55, left: 45 },
+                    defender2: { top: 90, left: 60 },
+                    defender3: { top: 110, left: 40 },
+                    defender4: { top: -100, left: 0 },
+                    goalkeeper: { top: 20, left: 50 }
+                },
+                hideDefenders: ['defender4'],
+                optimalTarget: 'striker',
+                tip: 'The defense-splitting through ball to the striker!'
+            }
+        ];
+
+        let currentScenario = null;
+
+        // DOM Elements
+        const fieldArea = document.getElementById('fieldArea');
+        const passButton = document.getElementById('passButton');
+        const ball = document.getElementById('ball');
+        const passLine = document.getElementById('passLine');
+        const instruction = document.getElementById('instruction');
+        const scenarioNameEl = document.getElementById('scenarioName');
+        const passer = document.getElementById('passer');
+        const toggleOptions = document.querySelectorAll('.toggle-option');
+        const teammates = document.querySelectorAll('.player.teammate');
+
+        // Modal elements
+        const resultModal = document.getElementById('resultModal');
+        const modalPopup = document.getElementById('modalPopup');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalSubtitle = document.getElementById('modalSubtitle');
+        const modalTip = document.getElementById('modalTip');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        // Stats elements
+        const completeCountEl = document.getElementById('completeCount');
+        const interceptCountEl = document.getElementById('interceptCount');
+        const assistCountEl = document.getElementById('assistCount');
+        const accuracyCountEl = document.getElementById('accuracyCount');
+        const resetStatsBtn = document.getElementById('resetStatsBtn');
+
+        // Initialize
+        function init() {
+            setupToggles();
+            setupTeammateSelection();
+            setupPassButton();
+            setupModal();
+            setupResetStats();
+            updatePasserColor(); // Set initial passer color based on default player type
+            updatePlayerStatsPanel(); // Set initial stats panel display
+            loadNewScenario();
+        }
+
+        // Toggle functionality
+        function setupToggles() {
+            toggleOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const type = this.dataset.type;
+                    const value = this.dataset.value;
+                    
+                    this.parentElement.querySelectorAll('.toggle-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    state[type] = value;
+                    
+                    // Change passer color and stats panel based on player type
+                    if (type === 'playerType') {
+                        passer.classList.remove('playmaker', 'engine', 'maestro');
+                        passer.classList.add(value);
+                        updatePlayerStatsPanel();
+                    }
+                    
+                    // Refresh preview when pass type changes (for through ball offset)
+                    if (type === 'passType' && state.selectedTarget) {
+                        showPreviewTrajectory(state.selectedTarget);
+                    }
+                });
+            });
+        }
+        
+        // Update passer color on initial load
+        function updatePasserColor() {
+            passer.classList.remove('playmaker', 'engine', 'maestro');
+            passer.classList.add(state.playerType);
+        }
+
+        // Update player stats panel display
+        function updatePlayerStatsPanel() {
+            const panel = document.getElementById('playerStatsPanel');
+            const icon = document.getElementById('playerTypeIcon');
+            const name = document.getElementById('playerTypeName');
+            const desc = document.getElementById('playerTypeDesc');
+            const groundBar = document.getElementById('groundBar');
+            const throughBar = document.getElementById('throughBar');
+            const lobBar = document.getElementById('lobBar');
+            const groundValue = document.getElementById('groundValue');
+            const throughValue = document.getElementById('throughValue');
+            const lobValue = document.getElementById('lobValue');
+
+            // Player type data
+            const playerData = {
+                playmaker: {
+                    icon: '🎯',
+                    name: 'Playmaker',
+                    desc: 'Creative & Visionary',
+                    ground: { percent: 50, value: '+10%' },
+                    through: { percent: 100, value: '+20%' },
+                    lob: { percent: 25, value: '+5%' }
+                },
+                engine: {
+                    icon: '⚙️',
+                    name: 'Engine',
+                    desc: 'Reliable & Safe',
+                    ground: { percent: 75, value: '+15%' },
+                    through: { percent: 25, value: '+5%' },
+                    lob: { percent: 0, value: '+0%' }
+                },
+                maestro: {
+                    icon: '🎼',
+                    name: 'Maestro',
+                    desc: 'Long Range Specialist',
+                    ground: { percent: 25, value: '+5%' },
+                    through: { percent: 50, value: '+10%' },
+                    lob: { percent: 100, value: '+20%' }
+                }
+            };
+
+            const data = playerData[state.playerType];
+
+            // Update panel class for colors
+            panel.classList.remove('playmaker', 'engine', 'maestro');
+            panel.classList.add(state.playerType);
+
+            // Update header
+            icon.textContent = data.icon;
+            name.textContent = data.name;
+            desc.textContent = data.desc;
+
+            // Update bars
+            groundBar.style.width = `${data.ground.percent}%`;
+            throughBar.style.width = `${data.through.percent}%`;
+            lobBar.style.width = `${data.lob.percent}%`;
+
+            // Update values
+            groundValue.textContent = data.ground.value;
+            throughValue.textContent = data.through.value;
+            lobValue.textContent = data.lob.value;
+        }
+
+        // Teammate selection
+        function setupTeammateSelection() {
+            teammates.forEach(teammate => {
+                teammate.addEventListener('click', function() {
+                    if (state.isAnimating) return;
+                    
+                    teammates.forEach(t => t.classList.remove('selected'));
+                    this.classList.add('selected');
+                    state.selectedTarget = this.dataset.target;
+                    
+                    // Show preview trajectory
+                    showPreviewTrajectory(state.selectedTarget);
+                    
+                    passButton.disabled = false;
+                    passButton.textContent = 'MAKE THE PASS!';
+                    instruction.textContent = `Target: ${getTargetName(state.selectedTarget)}`;
+                });
+            });
+        }
+
+        function getTargetName(target) {
+            const names = {
+                striker: 'Striker (ST)',
+                wingerLeft: 'Left Winger (LW)',
+                wingerRight: 'Right Winger (RW)',
+                midfielder: 'Central Midfielder (CM)'
+            };
+            return names[target] || target;
+        }
+
+        // Get target risk level
+        function getTargetRisk(targetId) {
+            const riskMap = {
+                striker: 'high',
+                wingerLeft: 'medium',
+                wingerRight: 'medium',
+                midfielder: 'low'
+            };
+            return riskMap[targetId] || 'medium';
+        }
+
+        // Show preview trajectory line
+        function showPreviewTrajectory(targetId) {
+            const targetEl = document.getElementById(targetId);
+            const goalEl = document.querySelector('.goal');
+            if (!targetEl) return;
+
+            // Calculate positions
+            const startX = passer.offsetLeft + passer.offsetWidth / 2;
+            const startY = passer.offsetTop + passer.offsetHeight / 2;
+            let targetX = targetEl.offsetLeft + targetEl.offsetWidth / 2;
+            let targetY = targetEl.offsetTop + targetEl.offsetHeight / 2;
+
+            // For through balls, extend towards goal
+            if (state.passType === 'through' && goalEl) {
+                const goalCenterX = goalEl.offsetLeft + goalEl.offsetWidth / 2;
+                const goalCenterY = goalEl.offsetTop + goalEl.offsetHeight / 2;
+                
+                const toGoalDx = goalCenterX - targetX;
+                const toGoalDy = goalCenterY - targetY;
+                const toGoalDist = Math.sqrt(toGoalDx * toGoalDx + toGoalDy * toGoalDy);
+                
+                if (toGoalDist > 0) {
+                    targetX = targetX + (toGoalDx / toGoalDist) * 50;
+                    targetY = targetY + (toGoalDy / toGoalDist) * 50;
+                }
+            }
+
+            // Calculate trajectory
+            const dx = targetX - startX;
+            const dy = targetY - startY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+            // Get risk level
+            const risk = getTargetRisk(targetId);
+
+            // Update pass line
+            passLine.style.left = `${startX}px`;
+            passLine.style.top = `${startY}px`;
+            passLine.style.width = `${distance}px`;
+            passLine.style.transform = `rotate(${angle}deg)`;
+
+            // Remove old risk classes and add preview
+            passLine.classList.remove('active', 'risk-high', 'risk-medium', 'risk-low');
+            passLine.classList.add('preview', `risk-${risk}`);
+        }
+
+        // Hide preview trajectory
+        function hidePreviewTrajectory() {
+            passLine.classList.remove('preview', 'risk-high', 'risk-medium', 'risk-low');
+        }
+
+        // Load a new scenario
+        function loadNewScenario() {
+            currentScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+            scenarioNameEl.textContent = currentScenario.name;
+            
+            // Get all defenders and goalkeeper
+            const allDefenders = ['defender1', 'defender2', 'defender3', 'defender4', 'goalkeeper'];
+            
+            // Reset all defenders first
+            allDefenders.forEach(id => {
+                const player = document.getElementById(id);
+                if (player) {
+                    player.classList.remove('intercepting', 'hidden', 'diving');
+                    player.style.transition = 'none';
+                }
+            });
+            
+            // Position the passer (YOU) - use custom position or default
+            passer.classList.remove('left-wing', 'right-wing', 'center');
+            
+            if (currentScenario.passerPosition) {
+                passer.style.bottom = `${currentScenario.passerPosition.bottom}px`;
+                passer.style.left = `${currentScenario.passerPosition.left}%`;
+                passer.style.top = 'auto'; // Clear top if set
+                
+                // Add appropriate class for transform adjustment
+                if (currentScenario.passerPosition.left < 30) {
+                    passer.classList.add('left-wing');
+                } else if (currentScenario.passerPosition.left > 70) {
+                    passer.classList.add('right-wing');
+                } else {
+                    passer.classList.add('center');
+                }
+            } else {
+                // Default center position
+                passer.style.bottom = '80px';
+                passer.style.left = '50%';
+                passer.style.top = 'auto';
+                passer.classList.add('center');
+            }
+            
+            // Position players
+            Object.keys(currentScenario.positions).forEach(playerId => {
+                const player = document.getElementById(playerId);
+                if (player) {
+                    const pos = currentScenario.positions[playerId];
+                    player.style.top = `${pos.top}px`;
+                    player.style.left = `${pos.left}%`;
+                }
+            });
+            
+            // Hide specified defenders/goalkeeper
+            if (currentScenario.hideDefenders) {
+                currentScenario.hideDefenders.forEach(id => {
+                    const player = document.getElementById(id);
+                    if (player) {
+                        player.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // Re-enable transition after positioning
+            setTimeout(() => {
+                allDefenders.forEach(id => {
+                    const player = document.getElementById(id);
+                    if (player) {
+                        player.style.transition = 'all 0.4s ease-out';
+                    }
+                });
+                // Re-enable teammate transitions
+                teammates.forEach(t => {
+                    t.style.transition = '';
+                });
+            }, 50);
+            
+            // Reset shot line
+            const shotLine = document.getElementById('shotLine');
+            if (shotLine) {
+                shotLine.classList.remove('active');
+            }
+            
+            // Reset selection and teammate animations
+            teammates.forEach(t => {
+                t.classList.remove('selected', 'receiving');
+                t.style.transition = 'none';
+                // Clear any stored original positions
+                delete t.dataset.originalLeft;
+                delete t.dataset.originalTop;
+            });
+            state.selectedTarget = null;
+            passButton.disabled = true;
+            passButton.textContent = 'SELECT A TARGET';
+            instruction.textContent = 'Click a teammate to select your pass target';
+            
+            // Reset ball and trajectory
+            ball.style.opacity = '0';
+            passLine.classList.remove('active', 'preview', 'risk-high', 'risk-medium', 'risk-low');
+        }
+
+        // Calculate pass success probability
+        function calculateSuccessProbability() {
+            let probability = 0.5; // Base 50%
+            
+            // Player type modifiers
+            const playerModifiers = {
+                playmaker: { ground: 0.1, through: 0.2, lob: 0.05 },
+                engine: { ground: 0.15, through: 0.05, lob: 0.0 },
+                maestro: { ground: 0.05, through: 0.1, lob: 0.2 }
+            };
+            
+            probability += playerModifiers[state.playerType][state.passType];
+            
+            // Pressure modifiers
+            const pressureModifiers = { low: 0.15, medium: 0, high: -0.15 };
+            probability += pressureModifiers[state.pressure];
+            
+            // Target risk modifiers
+            const targetRisk = {
+                striker: -0.15,
+                wingerLeft: 0,
+                wingerRight: 0,
+                midfielder: 0.2
+            };
+            probability += targetRisk[state.selectedTarget];
+            
+            // Pass type base difficulty
+            const passTypeDifficulty = { ground: 0.1, through: -0.1, lob: -0.15 };
+            probability += passTypeDifficulty[state.passType];
+            
+            // Optimal choice bonus
+            if (state.selectedTarget === currentScenario.optimalTarget) {
+                probability += 0.2;
+            }
+            
+            return Math.max(0.1, Math.min(0.95, probability));
+        }
+
+        // Determine outcome
+        function determineOutcome(probability) {
+            const random = Math.random();
+            
+            if (random < probability) {
+                // Success - check for assist
+                const isOptimal = state.selectedTarget === currentScenario.optimalTarget;
+                const assistChance = isOptimal ? 0.5 : 0.2;
+                
+                if (state.selectedTarget === 'striker' || (isOptimal && Math.random() < assistChance)) {
+                    return 'assist';
+                }
+                return 'complete';
+            }
+            return 'intercept';
+        }
+
+        // Pass button
+        function setupPassButton() {
+            passButton.addEventListener('click', function() {
+                if (!state.selectedTarget || state.isAnimating) return;
+                
+                state.isAnimating = true;
+                passButton.disabled = true;
+                
+                const probability = calculateSuccessProbability();
+                const outcome = determineOutcome(probability);
+                
+                animatePass(outcome);
+            });
+        }
+
+        // Find the closest defender to a point on the pass trajectory
+        function findInterceptingDefender(startX, startY, endX, endY) {
+            // Get all defenders (excluding hidden ones)
+            const defenderIds = ['defender1', 'defender2', 'defender3', 'defender4'];
+            const defenders = [];
+            
+            defenderIds.forEach(id => {
+                const def = document.getElementById(id);
+                if (def && !def.classList.contains('hidden')) {
+                    defenders.push({
+                        element: def,
+                        x: def.offsetLeft + def.offsetWidth / 2,
+                        y: def.offsetTop + def.offsetHeight / 2
+                    });
+                }
+            });
+            
+            // If no defenders visible, use defender1 as fallback
+            if (defenders.length === 0) {
+                const def1 = document.getElementById('defender1');
+                defenders.push({
+                    element: def1,
+                    x: def1.offsetLeft + def1.offsetWidth / 2,
+                    y: def1.offsetTop + def1.offsetHeight / 2
+                });
+            }
+            
+            // Calculate distance from each defender to the pass line
+            const dx = endX - startX;
+            const dy = endY - startY;
+            const lineLength = Math.sqrt(dx * dx + dy * dy);
+            
+            // Project defenders onto the pass line to find intercept points
+            function getInterceptPoint(defX, defY) {
+                const t = Math.max(0, Math.min(1, ((defX - startX) * dx + (defY - startY) * dy) / (lineLength * lineLength)));
+                return {
+                    x: startX + t * dx,
+                    y: startY + t * dy,
+                    t: t, // How far along the pass (0-1)
+                    dist: Math.sqrt(Math.pow(defX - (startX + t * dx), 2) + Math.pow(defY - (startY + t * dy), 2))
+                };
+            }
+            
+            // Find the best intercepting defender
+            let bestDefender = null;
+            let bestIntercept = null;
+            let bestScore = Infinity;
+            
+            defenders.forEach(def => {
+                const intercept = getInterceptPoint(def.x, def.y);
+                // Score: prefer defenders close to the line AND in the middle of the pass
+                const positionScore = Math.abs(intercept.t - 0.5); // 0 = middle, 0.5 = at start/end
+                const distanceScore = intercept.dist / 100;
+                const score = positionScore + distanceScore;
+                
+                if (intercept.t > 0.15 && intercept.t < 0.85 && score < bestScore) {
+                    bestScore = score;
+                    bestDefender = def;
+                    bestIntercept = intercept;
+                }
+            });
+            
+            // Fallback to first defender if none found in good position
+            if (!bestDefender) {
+                bestDefender = defenders[0];
+                bestIntercept = getInterceptPoint(defenders[0].x, defenders[0].y);
+            }
+            
+            return { 
+                defender: bestDefender.element, 
+                intercept: bestIntercept, 
+                defX: bestDefender.x, 
+                defY: bestDefender.y 
+            };
+        }
+
+        // Check if receiving position would cause direct overlap with defender
+        function wouldOverlapDefender(targetX, targetY) {
+            const allDefenderIds = ['defender1', 'defender2', 'defender3', 'defender4', 'goalkeeper'];
+            const overlapDistance = 25; // Only block if would directly overlap (player radius ~20px)
+            
+            for (const defId of allDefenderIds) {
+                const defender = document.getElementById(defId);
+                if (!defender || defender.classList.contains('hidden')) continue;
+                
+                const defX = defender.offsetLeft + defender.offsetWidth / 2;
+                const defY = defender.offsetTop + defender.offsetHeight / 2;
+                
+                // Check distance from defender to target position
+                const distToTarget = Math.sqrt(
+                    Math.pow(defX - targetX, 2) + Math.pow(defY - targetY, 2)
+                );
+                
+                // Only block if teammate would literally overlap with defender
+                if (distToTarget < overlapDistance) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        // Animate teammate receiving through ball
+        function animateTeammateReceive(targetEl, receiveX, receiveY, delay) {
+            // Check if receiving position would cause direct overlap with a defender
+            if (wouldOverlapDefender(receiveX, receiveY)) {
+                // Would overlap - adjust receiving position slightly or skip
+                // Try to find a safe nearby position
+                const adjustments = [
+                    { dx: 0, dy: 0 },      // Original
+                    { dx: -15, dy: 0 },    // Left
+                    { dx: 15, dy: 0 },     // Right
+                    { dx: 0, dy: -15 },    // Up
+                    { dx: 0, dy: 15 },     // Down
+                ];
+                
+                let safeX = receiveX;
+                let safeY = receiveY;
+                let foundSafe = false;
+                
+                for (const adj of adjustments) {
+                    const testX = receiveX + adj.dx;
+                    const testY = receiveY + adj.dy;
+                    if (!wouldOverlapDefender(testX, testY)) {
+                        safeX = testX;
+                        safeY = testY;
+                        foundSafe = true;
+                        break;
+                    }
+                }
+                
+                // If no safe position found, still animate but with reduced movement
+                if (!foundSafe) {
+                    const teammateX = targetEl.offsetLeft + targetEl.offsetWidth / 2;
+                    const teammateY = targetEl.offsetTop + targetEl.offsetHeight / 2;
+                    // Move only halfway
+                    safeX = teammateX + (receiveX - teammateX) * 0.5;
+                    safeY = teammateY + (receiveY - teammateY) * 0.5;
+                }
+                
+                receiveX = safeX;
+                receiveY = safeY;
+            }
+            
+            // Store original position for reset
+            const originalLeft = targetEl.style.left;
+            const originalTop = targetEl.style.top;
+            targetEl.dataset.originalLeft = originalLeft;
+            targetEl.dataset.originalTop = originalTop;
+            
+            // Start receiving animation after delay
+            setTimeout(() => {
+                targetEl.classList.add('receiving');
+                targetEl.style.left = `${receiveX - targetEl.offsetWidth / 2}px`;
+                targetEl.style.top = `${receiveY - targetEl.offsetHeight / 2}px`;
+            }, delay);
+        }
+
+        // Reset teammate position after animation
+        function resetTeammatePosition(targetEl) {
+            if (targetEl.dataset.originalLeft) {
+                targetEl.style.transition = 'none';
+                targetEl.classList.remove('receiving');
+                // Position will be reset on next scenario load
+            }
+        }
+
+        // Animate the pass
+        function animatePass(outcome) {
+            const targetEl = document.getElementById(state.selectedTarget);
+            const shotLine = document.getElementById('shotLine');
+            const goalEl = document.querySelector('.goal');
+            
+            // Calculate positions relative to field
+            const startX = passer.offsetLeft + passer.offsetWidth / 2;
+            const startY = passer.offsetTop + passer.offsetHeight / 2;
+            
+            const targetX = targetEl.offsetLeft + targetEl.offsetWidth / 2;
+            const targetY = targetEl.offsetTop + targetEl.offsetHeight / 2;
+            
+            // Ball always travels toward the target
+            let endX = targetX;
+            let endY = targetY;
+            
+            // For through balls, ALWAYS calculate the extended trajectory (towards goal)
+            const isThroughBall = state.passType === 'through';
+            let throughBallEndX = targetX;
+            let throughBallEndY = targetY;
+            
+            if (isThroughBall) {
+                // Calculate direction towards goal (top of field)
+                const goalCenterX = goalEl.offsetLeft + goalEl.offsetWidth / 2;
+                const goalCenterY = goalEl.offsetTop + goalEl.offsetHeight / 2;
+                
+                // Direction from target to goal
+                const toGoalDx = goalCenterX - targetX;
+                const toGoalDy = goalCenterY - targetY;
+                const toGoalDist = Math.sqrt(toGoalDx * toGoalDx + toGoalDy * toGoalDy);
+                
+                // Normalize and add offset (50px ahead of teammate)
+                if (toGoalDist > 0) {
+                    throughBallEndX = targetX + (toGoalDx / toGoalDist) * 50;
+                    throughBallEndY = targetY + (toGoalDy / toGoalDist) * 50;
+                }
+                
+                // Set end position to through ball target
+                endX = throughBallEndX;
+                endY = throughBallEndY;
+            }
+            
+            // For intercepts, find where the defender will intercept
+            let interceptData = null;
+            let interceptPoint = null;
+            
+            if (outcome === 'intercept') {
+                // Use the correct trajectory - through ball extended or direct
+                const interceptTargetX = isThroughBall ? throughBallEndX : targetX;
+                const interceptTargetY = isThroughBall ? throughBallEndY : targetY;
+                
+                interceptData = findInterceptingDefender(startX, startY, interceptTargetX, interceptTargetY);
+                interceptPoint = interceptData.intercept;
+                // Ball stops at the intercept point on the trajectory
+                endX = interceptPoint.x;
+                endY = interceptPoint.y;
+            }
+            
+            // Calculate pass trajectory
+            const dx = endX - startX;
+            const dy = endY - startY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            // Draw pass line - shows the INTENDED trajectory
+            // For through balls (even intercepted), show the extended trajectory
+            // For ground/lob, show direct path to teammate
+            let lineEndX = targetX;
+            let lineEndY = targetY;
+            
+            // For through balls, ALWAYS show extended trajectory (even when intercepted)
+            if (isThroughBall) {
+                lineEndX = throughBallEndX;
+                lineEndY = throughBallEndY;
+            }
+            
+            const fullDx = lineEndX - startX;
+            const fullDy = lineEndY - startY;
+            const fullDistance = Math.sqrt(fullDx * fullDx + fullDy * fullDy);
+            const fullAngle = Math.atan2(fullDy, fullDx) * 180 / Math.PI;
+            
+            // Get risk level for the target
+            const risk = getTargetRisk(state.selectedTarget);
+            
+            passLine.style.left = `${startX}px`;
+            passLine.style.top = `${startY}px`;
+            passLine.style.width = `${fullDistance}px`;
+            passLine.style.transform = `rotate(${fullAngle}deg)`;
+            
+            // Remove preview state but keep risk color
+            passLine.classList.remove('preview');
+            passLine.classList.add('active', `risk-${risk}`);
+            
+            // Animate ball
+            ball.style.left = `${startX - 10}px`;
+            ball.style.top = `${startY - 10}px`;
+            ball.style.opacity = '1';
+            
+            const duration = outcome === 'intercept' ? 600 : 800;
+            const startTime = performance.now();
+            
+            // If intercepting, animate defender moving to intercept point
+            if (outcome === 'intercept' && interceptData) {
+                const defender = interceptData.defender;
+                const moveDelay = 150; // Defender reacts slightly after pass starts
+                
+                setTimeout(() => {
+                    defender.classList.add('intercepting');
+                    defender.style.left = `${interceptPoint.x - defender.offsetWidth / 2}px`;
+                    defender.style.top = `${interceptPoint.y - defender.offsetHeight / 2}px`;
+                }, moveDelay);
+            }
+            
+            // For through balls (not intercepted), animate teammate running to receive
+            if (isThroughBall && outcome !== 'intercept') {
+                const receiveDelay = 200; // Teammate starts running shortly after pass
+                animateTeammateReceive(targetEl, endX, endY, receiveDelay);
+            }
+            
+            function animateBall(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3); // ease-out
+                
+                const currentX = startX + dx * eased - 10;
+                const currentY = startY + dy * eased - 10;
+                
+                // Add arc for lob passes
+                let arcOffset = 0;
+                if (state.passType === 'lob') {
+                    arcOffset = Math.sin(progress * Math.PI) * 50;
+                }
+                
+                ball.style.left = `${currentX}px`;
+                ball.style.top = `${currentY - arcOffset}px`;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateBall);
+                } else {
+                    // Pass animation complete
+                    if (outcome === 'assist') {
+                        // Animate the shot to goal
+                        animateGoal(endX, endY);
+                    } else {
+                        setTimeout(() => {
+                            showResult(outcome);
+                        }, 300);
+                    }
+                }
+            }
+            
+            requestAnimationFrame(animateBall);
+        }
+
+        // Animate the goal shot after an assist
+        function animateGoal(fromX, fromY) {
+            const shotLine = document.getElementById('shotLine');
+            const goalEl = document.querySelector('.goal');
+            const goalkeeper = document.getElementById('goalkeeper');
+            const fieldRect = fieldArea.getBoundingClientRect();
+            const goalRect = goalEl.getBoundingClientRect();
+            
+            // Goal position relative to field area (accounting for CSS transform)
+            // Add small randomness within the goal width
+            const randomOffset = (Math.random() - 0.5) * (goalRect.width * 0.5);
+            const goalX = (goalRect.left - fieldRect.left) + goalRect.width / 2 + randomOffset;
+            const goalY = (goalRect.top - fieldRect.top) + goalRect.height / 2 + 5; // Slightly inside the goal
+            
+            // Calculate shot trajectory
+            const shotDx = goalX - fromX;
+            const shotDy = goalY - fromY;
+            const shotDistance = Math.sqrt(shotDx * shotDx + shotDy * shotDy);
+            const shotAngle = Math.atan2(shotDy, shotDx) * 180 / Math.PI;
+            
+            // Draw shot line
+            shotLine.style.left = `${fromX}px`;
+            shotLine.style.top = `${fromY}px`;
+            shotLine.style.width = `${shotDistance}px`;
+            shotLine.style.transform = `rotate(${shotAngle}deg)`;
+            shotLine.classList.add('active');
+            
+            // Make goalkeeper dive (if visible)
+            if (goalkeeper && !goalkeeper.classList.contains('hidden')) {
+                setTimeout(() => {
+                    goalkeeper.classList.add('diving');
+                }, 100);
+            }
+            
+            // Animate ball to goal
+            const shotStartTime = performance.now();
+            const shotDuration = 500;
+            
+            function animateShot(currentTime) {
+                const elapsed = currentTime - shotStartTime;
+                const progress = Math.min(elapsed / shotDuration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                
+                const currentX = fromX + shotDx * eased - 10;
+                const currentY = fromY + shotDy * eased - 10;
+                
+                ball.style.left = `${currentX}px`;
+                ball.style.top = `${currentY}px`;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateShot);
+                } else {
+                    // Goal scored! Add flash effect
+                    const flash = document.createElement('div');
+                    flash.className = 'goal-flash';
+                    fieldArea.appendChild(flash);
+                    
+                    setTimeout(() => {
+                        flash.remove();
+                        showResult('assist');
+                    }, 500);
+                }
+            }
+            
+            // Small delay before shot
+            setTimeout(() => {
+                requestAnimationFrame(animateShot);
+            }, 200);
+        }
+
+        // Update stats
+        function updateStats(outcome) {
+            stats.total++;
+            
+            if (outcome === 'complete') {
+                stats.complete++;
+            } else if (outcome === 'intercept') {
+                stats.intercept++;
+            } else if (outcome === 'assist') {
+                stats.assist++;
+                stats.complete++; // Assists count as completions too
+            }
+            
+            const accuracy = stats.total > 0 
+                ? Math.round(((stats.complete) / stats.total) * 100) 
+                : 0;
+            
+            completeCountEl.textContent = stats.complete;
+            interceptCountEl.textContent = stats.intercept;
+            assistCountEl.textContent = stats.assist;
+            accuracyCountEl.textContent = `${accuracy}%`;
+        }
+
+        // Show result modal
+        function showResult(outcome) {
+            updateStats(outcome);
+            
+            modalPopup.className = `modal-popup ${outcome}`;
+            
+            const isOptimal = state.selectedTarget === currentScenario.optimalTarget;
+            
+            if (outcome === 'assist') {
+                modalIcon.textContent = '🎯';
+                modalTitle.textContent = 'ASSIST!';
+                modalSubtitle.textContent = 'Great vision! Your pass led to a goal!';
+            } else if (outcome === 'complete') {
+                modalIcon.textContent = '✅';
+                modalTitle.textContent = 'PASS COMPLETE';
+                modalSubtitle.textContent = isOptimal 
+                    ? 'Excellent choice! You found the best option.'
+                    : 'Pass successful, but there may have been a better option.';
+            } else {
+                modalIcon.textContent = '❌';
+                modalTitle.textContent = 'INTERCEPTED';
+                modalSubtitle.textContent = 'The defender read your pass!';
+            }
+            
+            modalTip.textContent = `💡 Tip: ${currentScenario.tip}`;
+            resultModal.classList.add('show');
+        }
+
+        // Modal setup
+        function setupModal() {
+            modalCloseBtn.addEventListener('click', closeModal);
+            resultModal.addEventListener('click', function(e) {
+                if (e.target === resultModal) {
+                    closeModal();
+                }
+            });
+        }
+
+        function closeModal() {
+            resultModal.classList.remove('show');
+            state.isAnimating = false;
+            loadNewScenario();
+        }
+
+        // Reset stats
+        function setupResetStats() {
+            resetStatsBtn.addEventListener('click', function() {
+                stats.complete = 0;
+                stats.intercept = 0;
+                stats.assist = 0;
+                stats.total = 0;
+                
+                completeCountEl.textContent = '0';
+                interceptCountEl.textContent = '0';
+                assistCountEl.textContent = '0';
+                accuracyCountEl.textContent = '0%';
+            });
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
