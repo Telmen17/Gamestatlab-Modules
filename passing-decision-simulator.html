@@ -912,7 +912,7 @@
                     </div>
                     <div class="stat-item assist-stat">
                         <div class="stat-count" id="assistCount">0</div>
-                        <div class="stat-label">Assists</div>
+                        <div class="stat-label">Goals</div>
                     </div>
                     <div class="stat-item accuracy-stat">
                         <div class="stat-count" id="accuracyCount">0%</div>
@@ -2301,9 +2301,9 @@
             const isOptimal = state.selectedTarget === currentScenario.optimalTarget;
             
             if (outcome === 'assist') {
-                modalIcon.textContent = '🎯';
-                modalTitle.textContent = 'ASSIST!';
-                modalSubtitle.textContent = 'Great vision! Your pass led to a goal!';
+                modalIcon.textContent = '⚽';
+                modalTitle.textContent = 'GOAL!';
+                modalSubtitle.textContent = 'Great vision! Your assist led to a goal!';
             } else if (outcome === 'complete') {
                 modalIcon.textContent = '✅';
                 modalTitle.textContent = 'PASS COMPLETE';
