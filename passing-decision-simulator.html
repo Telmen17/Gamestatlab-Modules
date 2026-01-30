@@ -5,127 +5,138 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Passing Decision Simulator</title>
     <style>
+        /* WordPress Override Reset */
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: transparent;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            background: transparent !important;
+            min-height: 100vh !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            padding: 20px !important;
         }
 
         .container {
-            background: linear-gradient(to bottom, #FFFFFF 0%, #F5F5F5 100%);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
-            width: 100%;
-            border: 3px solid #2E7D32;
+            background: linear-gradient(to bottom, #FFFFFF 0%, #F5F5F5 100%) !important;
+            border-radius: 20px !important;
+            padding: 25px !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+            max-width: 800px !important;
+            width: 100% !important;
+            border: 3px solid #2E7D32 !important;
+            margin: 0 auto !important;
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 20px;
+            text-align: center !important;
+            margin-bottom: 20px !important;
+            padding: 0 !important;
         }
 
         .header h1 {
-            color: #2E7D32;
-            font-size: 1.8em;
-            margin-bottom: 5px;
+            color: #2E7D32 !important;
+            font-size: 1.8em !important;
+            margin-bottom: 5px !important;
+            padding: 0 !important;
+            line-height: 1.2 !important;
         }
 
         .header p {
-            color: #666;
-            font-size: 0.9em;
+            color: #666 !important;
+            font-size: 0.9em !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         /* Scenario Indicator */
         .scenario-bar {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
-            border-radius: 10px;
-            color: white;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 15px !important;
+            margin-bottom: 15px !important;
+            padding: 10px !important;
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%) !important;
+            border-radius: 10px !important;
+            color: white !important;
         }
 
         .scenario-label {
-            font-size: 0.85em;
-            opacity: 0.8;
+            font-size: 0.85em !important;
+            opacity: 0.8 !important;
+            color: white !important;
         }
 
         .scenario-name {
-            font-size: 1.1em;
-            font-weight: bold;
+            font-size: 1.1em !important;
+            font-weight: bold !important;
+            color: white !important;
         }
 
         /* Field Area */
         .field-area {
-            position: relative;
-            width: 100%;
-            height: 350px;
-            background: linear-gradient(to bottom, #4CAF50 0%, #4CAF50 60%, #388E3C 100%);
-            border-radius: 15px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            border: 3px solid #fff;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+            position: relative !important;
+            width: 100% !important;
+            height: 350px !important;
+            background: linear-gradient(to bottom, #4CAF50 0%, #4CAF50 60%, #388E3C 100%) !important;
+            border-radius: 15px !important;
+            margin-bottom: 20px !important;
+            overflow: hidden !important;
+            border: 3px solid #fff !important;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2) !important;
         }
 
         /* Field markings */
         .field-area::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 80px;
-            border: 3px solid rgba(255, 255, 255, 0.5);
-            border-top: none;
-            border-radius: 0 0 10px 10px;
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 200px !important;
+            height: 80px !important;
+            border: 3px solid rgba(255, 255, 255, 0.5) !important;
+            border-top: none !important;
+            border-radius: 0 0 10px 10px !important;
         }
 
         /* Goal */
         .goal {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 25px;
-            background: rgba(255, 255, 255, 0.3);
-            border: 3px solid #fff;
-            border-top: none;
+            position: absolute !important;
+            top: 0 !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 120px !important;
+            height: 25px !important;
+            background: rgba(255, 255, 255, 0.3) !important;
+            border: 3px solid #fff !important;
+            border-top: none !important;
         }
 
         /* Player base styles */
         .player {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7em;
-            font-weight: bold;
-            color: white;
-            cursor: default;
-            transition: all 0.3s ease;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            z-index: 5;
+            position: absolute !important;
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 0.7em !important;
+            font-weight: bold !important;
+            color: white !important;
+            cursor: default !important;
+            transition: all 0.3s ease !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+            z-index: 5 !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         /* Responsive: smaller players on small screens */
@@ -154,39 +165,39 @@
 
         /* You (the passer) */
         .player.passer {
-            background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%);
-            border: 3px solid #fff;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 0 15px rgba(33, 150, 243, 0.6);
-            z-index: 10;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
+            background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%) !important;
+            border: 3px solid #fff !important;
+            bottom: 80px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.6) !important;
+            z-index: 10 !important;
+            transition: background 0.3s ease, box-shadow 0.3s ease !important;
         }
 
         /* Player type color variations */
         .player.passer.playmaker {
-            background: linear-gradient(135deg, #9C27B0 0%, #6A1B9A 100%); /* Purple - creative */
-            box-shadow: 0 0 15px rgba(156, 39, 176, 0.6);
+            background: linear-gradient(135deg, #9C27B0 0%, #6A1B9A 100%) !important;
+            box-shadow: 0 0 15px rgba(156, 39, 176, 0.6) !important;
         }
 
         .player.passer.engine {
-            background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%); /* Blue - reliable */
-            box-shadow: 0 0 15px rgba(33, 150, 243, 0.6);
+            background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%) !important;
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.6) !important;
         }
 
         .player.passer.maestro {
-            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); /* Orange - vision */
-            box-shadow: 0 0 15px rgba(255, 152, 0, 0.6);
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%) !important;
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.6) !important;
         }
 
         /* Passer position adjustments for wing scenarios */
         .player.passer.left-wing {
-            transform: translateX(-30%);
+            transform: translateX(-30%) !important;
         }
 
         .player.passer.right-wing {
-            transform: translateX(-70%);
+            transform: translateX(-70%) !important;
         }
 
         .player.passer.center {
@@ -195,61 +206,62 @@
 
         /* Ball indicator */
         .player.passer::after {
-            content: '⚽';
-            position: absolute;
-            bottom: -20px;
-            font-size: 16px;
+            content: '⚽' !important;
+            position: absolute !important;
+            bottom: -20px !important;
+            font-size: 16px !important;
         }
 
         /* Teammates */
         .player.teammate {
-            background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%);
-            border: 3px solid #64B5F6;
-            cursor: pointer;
+            background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%) !important;
+            border: 3px solid #64B5F6 !important;
+            cursor: pointer !important;
         }
 
         .player.teammate:hover {
-            transform: scale(1.15);
-            box-shadow: 0 0 20px rgba(33, 150, 243, 0.8);
-            z-index: 20;
+            transform: scale(1.15) !important;
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.8) !important;
+            z-index: 20 !important;
         }
 
         .player.teammate.selected {
-            border-color: #FFEB3B;
-            box-shadow: 0 0 25px rgba(255, 235, 59, 0.9);
+            border-color: #FFEB3B !important;
+            box-shadow: 0 0 25px rgba(255, 235, 59, 0.9) !important;
         }
 
         /* Teammate receiving through ball animation */
         .player.teammate.receiving {
-            transition: left 0.6s ease-out, top 0.6s ease-out;
-            z-index: 25;
-            box-shadow: 0 0 20px rgba(33, 150, 243, 0.9);
+            transition: left 0.6s ease-out, top 0.6s ease-out !important;
+            z-index: 25 !important;
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.9) !important;
         }
 
         .player.teammate .risk-indicator {
-            position: absolute;
-            bottom: -18px;
-            font-size: 0.65em;
-            padding: 2px 6px;
-            border-radius: 8px;
-            white-space: nowrap;
+            position: absolute !important;
+            bottom: -18px !important;
+            font-size: 0.65em !important;
+            padding: 2px 6px !important;
+            border-radius: 8px !important;
+            white-space: nowrap !important;
+            color: white !important;
         }
 
-        .risk-low { background: #1B5E20; }
-        .risk-medium { background: #FF9800; }
-        .risk-high { background: #f44336; }
+        .risk-low { background: #1B5E20 !important; }
+        .risk-medium { background: #FF9800 !important; }
+        .risk-high { background: #f44336 !important; }
 
         /* Defenders */
         .player.defender {
-            background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
-            border: 3px solid #ef9a9a;
-            transition: all 0.4s ease-out;
+            background: linear-gradient(135deg, #f44336 0%, #c62828 100%) !important;
+            border: 3px solid #ef9a9a !important;
+            transition: all 0.4s ease-out !important;
         }
 
         .player.defender.intercepting {
-            transform: scale(1.2);
-            box-shadow: 0 0 20px rgba(244, 67, 54, 0.8);
-            z-index: 25;
+            transform: scale(1.2) !important;
+            box-shadow: 0 0 20px rgba(244, 67, 54, 0.8) !important;
+            z-index: 25 !important;
         }
 
         .player.defender.hidden {
@@ -258,12 +270,12 @@
 
         /* Goalkeeper */
         .player.goalkeeper {
-            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-            border: 3px solid #FFB74D;
-            width: 45px;
-            height: 45px;
-            font-size: 0.65em;
-            z-index: 4; /* Below teammates so they're clickable */
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%) !important;
+            border: 3px solid #FFB74D !important;
+            width: 45px !important;
+            height: 45px !important;
+            font-size: 0.65em !important;
+            z-index: 4 !important;
         }
 
         .player.goalkeeper.hidden {
@@ -271,17 +283,17 @@
         }
 
         .player.goalkeeper.diving {
-            animation: goalkeeperDive 0.5s ease-out forwards;
+            animation: goalkeeperDive 0.5s ease-out forwards !important;
         }
 
         /* Ensure teammates are always clickable above goalkeeper */
         .player.teammate {
-            z-index: 8;
+            z-index: 8 !important;
         }
 
         /* Striker has highest z-index among teammates */
         #striker {
-            z-index: 9;
+            z-index: 9 !important;
         }
 
         @keyframes goalkeeperDive {
@@ -291,11 +303,11 @@
 
         /* Shot line for goal animation */
         .shot-line {
-            position: absolute;
-            height: 4px;
-            background: linear-gradient(90deg, #4CAF50, #8BC34A);
-            transform-origin: left center;
-            opacity: 0;
+            position: absolute !important;
+            height: 4px !important;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A) !important;
+            transform-origin: left center !important;
+            opacity: 0 !important;
             z-index: 5;
             border-radius: 2px;
             box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
@@ -356,7 +368,7 @@
         /* Risk-based line colors */
         .pass-line.risk-high {
             background: linear-gradient(90deg, #f44336, #ff5252) !important;
-            box-shadow: 0 0 15px rgba(244, 67, 54, 0.8), 0 0 30px rgba(244, 67, 54, 0.5);
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.8), 0 0 30px rgba(244, 67, 54, 0.5) !important;
         }
         .pass-line.risk-high.preview {
             background: repeating-linear-gradient(
@@ -366,12 +378,12 @@
                 transparent 10px,
                 transparent 18px
             ) !important;
-            box-shadow: 0 0 20px rgba(244, 67, 54, 0.9), 0 0 40px rgba(244, 67, 54, 0.6);
+            box-shadow: 0 0 20px rgba(244, 67, 54, 0.9), 0 0 40px rgba(244, 67, 54, 0.6) !important;
         }
 
         .pass-line.risk-medium {
             background: linear-gradient(90deg, #FF9800, #FFB74D) !important;
-            box-shadow: 0 0 15px rgba(255, 152, 0, 0.8), 0 0 30px rgba(255, 152, 0, 0.5);
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.8), 0 0 30px rgba(255, 152, 0, 0.5) !important;
         }
         .pass-line.risk-medium.preview {
             background: repeating-linear-gradient(
@@ -381,12 +393,12 @@
                 transparent 10px,
                 transparent 18px
             ) !important;
-            box-shadow: 0 0 20px rgba(255, 152, 0, 0.9), 0 0 40px rgba(255, 152, 0, 0.6);
+            box-shadow: 0 0 20px rgba(255, 152, 0, 0.9), 0 0 40px rgba(255, 152, 0, 0.6) !important;
         }
 
         .pass-line.risk-low {
             background: linear-gradient(90deg, #1B5E20, #2E7D32) !important;
-            box-shadow: 0 0 15px rgba(27, 94, 32, 0.8), 0 0 30px rgba(27, 94, 32, 0.5);
+            box-shadow: 0 0 15px rgba(27, 94, 32, 0.8), 0 0 30px rgba(27, 94, 32, 0.5) !important;
         }
         .pass-line.risk-low.preview {
             background: repeating-linear-gradient(
@@ -396,17 +408,17 @@
                 transparent 10px,
                 transparent 18px
             ) !important;
-            box-shadow: 0 0 20px rgba(27, 94, 32, 0.9), 0 0 40px rgba(46, 125, 50, 0.6);
+            box-shadow: 0 0 20px rgba(27, 94, 32, 0.9), 0 0 40px rgba(46, 125, 50, 0.6) !important;
         }
 
         /* Ball animation */
         .ball {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            z-index: 15;
-            opacity: 0;
-            transition: none;
+            position: absolute !important;
+            width: 20px !important;
+            height: 20px !important;
+            z-index: 15 !important;
+            opacity: 0 !important;
+            transition: none !important;
         }
 
         .ball img {
@@ -417,70 +429,74 @@
 
         /* Instruction text */
         .instruction {
-            text-align: center;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            font-size: 0.9em;
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 20px;
-            white-space: nowrap;
+            text-align: center !important;
+            padding: 10px !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            color: white !important;
+            font-size: 0.9em !important;
+            position: absolute !important;
+            bottom: 10px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            border-radius: 20px !important;
+            white-space: nowrap !important;
         }
 
         /* Controls */
         .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 15px !important;
+            width: 100% !important;
         }
 
         .control-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 10px;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 10px !important;
+            background: #f5f5f5 !important;
+            border-radius: 10px !important;
+            width: 100% !important;
+            flex-wrap: wrap !important;
         }
 
         .control-label {
-            font-weight: 600;
-            min-width: 100px;
-            color: #333;
-            font-size: 0.9em;
+            font-weight: 600 !important;
+            min-width: 100px !important;
+            color: #333 !important;
+            font-size: 0.9em !important;
         }
 
         .toggle-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            flex: 1;
+            display: flex !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+            flex: 1 !important;
         }
 
         .toggle-option {
-            padding: 8px 14px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85em;
-            font-weight: 500;
-            min-height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-            min-width: 0;
-            text-align: center;
+            padding: 8px 14px !important;
+            border: 2px solid #ddd !important;
+            border-radius: 8px !important;
+            background: white !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            font-size: 0.85em !important;
+            font-weight: 500 !important;
+            min-height: 38px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 1 !important;
+            min-width: 0 !important;
+            text-align: center !important;
+            color: #333 !important;
         }
 
         .toggle-option:hover {
-            border-color: #2196F3;
-            background: #E3F2FD;
+            border-color: #2196F3 !important;
+            background: #E3F2FD !important;
         }
 
         .toggle-option.active {
@@ -586,107 +602,110 @@
 
         /* Player Stats Panel */
         .player-stats-panel {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            color: white;
-            border: 2px solid #0f3460;
-            transition: border-color 0.3s ease;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+            border-radius: 12px !important;
+            padding: 15px !important;
+            margin-bottom: 15px !important;
+            color: white !important;
+            border: 2px solid #0f3460 !important;
+            transition: border-color 0.3s ease !important;
+            width: 100% !important;
+            display: block !important;
         }
 
         .player-stats-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            margin-bottom: 12px !important;
+            padding-bottom: 10px !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
         }
 
         .player-type-icon {
-            font-size: 1.5em;
+            font-size: 1.5em !important;
         }
 
         .player-type-name {
-            font-size: 1.2em;
-            font-weight: bold;
+            font-size: 1.2em !important;
+            font-weight: bold !important;
+            color: white !important;
         }
 
         .player-type-desc {
-            font-size: 0.8em;
-            color: rgba(255,255,255,0.6);
-            margin-left: auto;
+            font-size: 0.8em !important;
+            color: rgba(255,255,255,0.6) !important;
+            margin-left: auto !important;
         }
 
         .player-stats-bars {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
         }
 
         .stat-bar-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
         }
 
         .stat-bar-label {
-            font-size: 0.8em;
-            width: 85px;
-            color: rgba(255,255,255,0.8);
+            font-size: 0.8em !important;
+            width: 85px !important;
+            color: rgba(255,255,255,0.8) !important;
         }
 
         .stat-bar-container {
-            flex: 1;
-            height: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 4px;
-            overflow: hidden;
+            flex: 1 !important;
+            height: 8px !important;
+            background: rgba(255,255,255,0.1) !important;
+            border-radius: 4px !important;
+            overflow: hidden !important;
         }
 
         .stat-bar {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.4s ease, background 0.4s ease;
+            height: 100% !important;
+            border-radius: 4px !important;
+            transition: width 0.4s ease, background 0.4s ease !important;
         }
 
         .stat-bar-value {
-            font-size: 0.8em;
-            font-weight: bold;
-            width: 40px;
-            text-align: right;
+            font-size: 0.8em !important;
+            font-weight: bold !important;
+            width: 40px !important;
+            text-align: right !important;
         }
 
         /* Player type specific colors for bars */
         .player-stats-panel.playmaker .stat-bar {
-            background: linear-gradient(90deg, #9C27B0, #E040FB);
+            background: linear-gradient(90deg, #9C27B0, #E040FB) !important;
         }
         .player-stats-panel.playmaker {
-            border-color: #9C27B0;
+            border-color: #9C27B0 !important;
         }
         .player-stats-panel.playmaker .stat-bar-value {
-            color: #E040FB;
+            color: #E040FB !important;
         }
 
         .player-stats-panel.engine .stat-bar {
-            background: linear-gradient(90deg, #2196F3, #03A9F4);
+            background: linear-gradient(90deg, #2196F3, #03A9F4) !important;
         }
         .player-stats-panel.engine {
-            border-color: #2196F3;
+            border-color: #2196F3 !important;
         }
         .player-stats-panel.engine .stat-bar-value {
-            color: #03A9F4;
+            color: #03A9F4 !important;
         }
 
         .player-stats-panel.maestro .stat-bar {
-            background: linear-gradient(90deg, #FF9800, #FFC107);
+            background: linear-gradient(90deg, #FF9800, #FFC107) !important;
         }
         .player-stats-panel.maestro {
-            border-color: #FF9800;
+            border-color: #FF9800 !important;
         }
         .player-stats-panel.maestro .stat-bar-value {
-            color: #FFC107;
+            color: #FFC107 !important;
         }
 
         /* Modal */
@@ -776,7 +795,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>⚽ Passing Decision Trainer</h1>
+            <h1>⚽ Passing Position Simulator</h1>
             <p>Choose the best passing option based on the situation</p>
         </div>
 
