@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-            background: transparent !important;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 30%, #1e3d2f 70%, #0d2818 100%) !important;
             min-height: 100vh !important;
             display: flex !important;
             justify-content: center !important;
@@ -23,13 +23,13 @@
         }
 
         .container {
-            background: linear-gradient(to bottom, #FFFFFF 0%, #F5F5F5 100%) !important;
+            background: linear-gradient(to bottom, #f8faf8 0%, #e8f0e8 100%) !important;
             border-radius: 20px !important;
             padding: 25px !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(46, 125, 50, 0.3) !important;
             max-width: 800px !important;
             width: 100% !important;
-            border: 3px solid #2E7D32 !important;
+            border: 4px solid #2E7D32 !important;
             margin: 0 auto !important;
         }
 
@@ -48,7 +48,7 @@
         }
 
         .header p {
-            color: #666 !important;
+            color: #4a5d4a !important;
             font-size: 0.9em !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -139,7 +139,39 @@
             margin: 0 !important;
         }
 
-        /* Responsive: smaller players on small screens */
+        /* Responsive: Tablet screens */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px !important;
+            }
+            
+            .header h1 {
+                font-size: 1.5em !important;
+            }
+            
+            .control-row {
+                padding: 8px !important;
+                gap: 8px !important;
+            }
+            
+            .control-label {
+                min-width: 80px !important;
+                font-size: 0.8em !important;
+            }
+            
+            .toggle-option {
+                padding: 6px 10px !important;
+                font-size: 0.75em !important;
+                min-height: 34px !important;
+            }
+            
+            .pass-button {
+                padding: 14px !important;
+                font-size: 1.1em !important;
+            }
+        }
+
+        /* Responsive: Mobile screens */
         @media (max-width: 600px) {
             .player {
                 width: 32px;
@@ -160,6 +192,139 @@
             
             .field-area {
                 height: 300px !important;
+            }
+            
+            .container {
+                padding: 12px !important;
+                border-radius: 15px !important;
+            }
+            
+            .header h1 {
+                font-size: 1.3em !important;
+            }
+            
+            .header p {
+                font-size: 0.8em !important;
+            }
+            
+            .scenario-bar {
+                padding: 8px !important;
+                gap: 10px !important;
+            }
+            
+            .scenario-label {
+                font-size: 0.75em !important;
+            }
+            
+            .scenario-name {
+                font-size: 0.95em !important;
+            }
+            
+            .control-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 8px !important;
+            }
+            
+            .control-label {
+                min-width: auto !important;
+                text-align: center !important;
+                font-size: 0.85em !important;
+                margin-bottom: 4px !important;
+            }
+            
+            .toggle-group {
+                justify-content: center !important;
+            }
+            
+            .toggle-option {
+                padding: 8px 8px !important;
+                font-size: 0.7em !important;
+                min-height: 32px !important;
+                flex: 1 1 auto !important;
+            }
+            
+            .pass-button {
+                padding: 12px !important;
+                font-size: 1em !important;
+            }
+            
+            /* Player stats panel responsive */
+            .player-stats-panel {
+                padding: 10px !important;
+            }
+            
+            .player-stats-header {
+                gap: 8px !important;
+            }
+            
+            .player-type-icon {
+                font-size: 1.2em !important;
+            }
+            
+            .player-type-name {
+                font-size: 1em !important;
+            }
+            
+            .player-type-desc {
+                font-size: 0.7em !important;
+            }
+            
+            .stat-bar-label {
+                width: 70px !important;
+                font-size: 0.7em !important;
+            }
+            
+            .stat-bar-value {
+                width: 35px !important;
+                font-size: 0.7em !important;
+            }
+            
+            /* Stats tracker responsive */
+            .stats-tracker {
+                padding: 10px !important;
+            }
+            
+            .stats-title {
+                font-size: 0.85em !important;
+            }
+            
+            .stat-item {
+                padding: 8px 5px !important;
+            }
+            
+            .stat-count {
+                font-size: 1.2em !important;
+            }
+            
+            .stat-label {
+                font-size: 0.65em !important;
+            }
+        }
+
+        /* Responsive: Very small screens */
+        @media (max-width: 400px) {
+            .toggle-option {
+                padding: 6px 4px !important;
+                font-size: 0.6em !important;
+                min-height: 28px !important;
+            }
+            
+            .header h1 {
+                font-size: 1.1em !important;
+            }
+            
+            .control-label {
+                font-size: 0.75em !important;
+            }
+            
+            .player-type-desc {
+                display: none !important;
+            }
+            
+            .stat-bar-label {
+                width: 60px !important;
+                font-size: 0.65em !important;
             }
         }
 
